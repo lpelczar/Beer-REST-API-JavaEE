@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "beers")
@@ -28,6 +29,7 @@ public class Beer {
     @JoinColumn(name = "style_id")
     private Style style;
 
+    @Size(max = 255)
     private String name;
 
     private float abv;
