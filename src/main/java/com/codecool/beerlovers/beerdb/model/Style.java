@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "styles")
@@ -20,6 +21,7 @@ public class Style {
     private Category category;
 
     @Column(name = "style_name")
+    @Size(max = 255)
     private String name;
 
     public Style() {
