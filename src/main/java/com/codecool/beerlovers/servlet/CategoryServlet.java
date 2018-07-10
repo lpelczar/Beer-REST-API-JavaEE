@@ -40,7 +40,7 @@ public class CategoryServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
                 int id = Integer.valueOf(splits[1]);
-                if(isCategoryInDatabse(id)) {
+                if(isCategoryInDatabase(id)) {
                     Category category = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                             .setParameter("idFromURI", id).getSingleResult();
                     String catToJSON = objectMapper.writeValueAsString(category);
