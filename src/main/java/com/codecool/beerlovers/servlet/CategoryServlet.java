@@ -100,6 +100,19 @@ public class CategoryServlet extends HttpServlet {
 
     }
 
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String json = getJson(req, resp);
+        Category category = objectMapper.readValue(json, Category.class);
+        if(isCategoryInDatabase(category.getId())) {
+            em.getTransaction().begin();
+            Category updateCategory = em.find(Category.class, category.getId());
+            updateCategory.setName(category.getName());
+            em.getTransaction().commit();
+        }else{
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
     private String getJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         String line;
