@@ -34,17 +34,26 @@ public class BreweryServlet extends HttpServlet {
         System.out.println(pathInfo);
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class)
-                    .getResultList();
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ObjectMapper mapper = new ObjectMapper();
-
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-            mapper.writeValue(out, breweries);
-
-            resp.getWriter().write(new String(out.toByteArray()));
+            List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
+            sendAsJson(resp, breweries);
         }
+
+        String[] splits = pathInfo.split("/");
+
+        if (splits.length != 2) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        String breweryId = splits[1];
+
     }
 
+    private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.writeValue(out, toJson);
+        response.getWriter().write(new String(out.toByteArray()));
+    }
 }
