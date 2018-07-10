@@ -74,7 +74,35 @@ public class CategoryServlet extends HttpServlet {
         resp.sendRedirect("/categories/" + category.getId());
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String path = req.getPathInfo();
+        em.getTransaction().begin();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        if(path == null || path.equals("/")) {
+            List<Category> categories = em.createQuery("SELECT c FROM Category c", Category.class).getResultList();
+            em.remove(categories);
+            em.getTransaction().commit();
 
+        }else{
+            String[] splits = path.split("/");
+            if(splits.length != 2 || !StringUtils.isStrictlyNumeric(splits[1])){
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }else{
+                int id = Integer.valueOf(splits[1]);
+                if(isCategoryInDatabse(id)) {
+                    Category category = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+                            .setParameter("idFromURI", id).getSingleResult();
+                    em.remove(category);
+                    em.getTransaction().commit();
+                }else{
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
+            }
+        }
+        resp.sendRedirect("/categories/");
+
+    }
 
     private boolean isCategoryInDatabse(int id){
         Query query = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
