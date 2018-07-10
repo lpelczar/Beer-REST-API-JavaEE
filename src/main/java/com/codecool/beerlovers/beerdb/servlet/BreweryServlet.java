@@ -4,11 +4,13 @@ package com.codecool.beerlovers.beerdb.servlet;
 import com.codecool.beerlovers.beerdb.model.Brewery;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,7 +30,7 @@ public class BreweryServlet extends HttpServlet {
     // GET /breweries/ - list all breweries
     // GET /breweries/id - retrieve one brewery by id
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String pathInfo = req.getPathInfo();
         System.out.println(pathInfo);
@@ -36,16 +38,23 @@ public class BreweryServlet extends HttpServlet {
         if (pathInfo == null || pathInfo.equals("/")) {
             List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
             sendAsJson(resp, breweries);
+        } else {
+            String[] splits = pathInfo.split("/");
+
+            if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            String breweryId = splits[1];
+            Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
+            query.setParameter("id", Integer.parseInt(breweryId));
+
+            if (query.getResultList().size() == 0) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+            sendAsJson(resp, query.getSingleResult());
         }
-
-        String[] splits = pathInfo.split("/");
-
-        if (splits.length != 2) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        String breweryId = splits[1];
 
     }
 
