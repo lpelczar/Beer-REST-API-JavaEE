@@ -37,14 +37,15 @@ public class BeerServlet extends HttpServlet {
 
         String query = "SELECT b FROM Beer b WHERE b.category.id != -1 AND b.style.id != -1";
         int beerID = getIDOfBeer(req.getRequestURI());
-        log.info(String.valueOf(beerID));
         if (beerID > RETURN_COLLECTION) query = query + "AND b.id = " + beerID;
 
+        entityManager.getTransaction().begin();
         List<Beer> beers = entityManager
                 .createQuery(query, Beer.class).getResultList();
         resp.setContentType("application/json");
 
         String json = mapper.writeValueAsString(beers);
+        entityManager.getTransaction().commit();
 
 
         resp.getWriter().write(json);
@@ -70,6 +71,16 @@ public class BeerServlet extends HttpServlet {
 
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+        String query = "DELETE FROM Beer";
+        int beerID = getIDOfBeer(req.getRequestURI());
+        if (beerID > RETURN_COLLECTION) query = query + " b WHERE b.id = " + beerID;
+
+        entityManager.getTransaction().begin();
+        entityManager.createQuery(query).executeUpdate();
+        entityManager.getTransaction().commit();
+    }
 
     private int getIDOfBeer(String requestURI) {
         List<String> pathVariables = Arrays.asList(requestURI.split("/"));
