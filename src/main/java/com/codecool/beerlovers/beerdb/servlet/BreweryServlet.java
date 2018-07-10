@@ -95,6 +95,30 @@ public class BreweryServlet extends HttpServlet {
         }
     }
 
+    // DELETE /breweries/ - delete entire collection
+    // DELETE /breweries/id - delete one brewery
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
+
+        //Delete entire collection
+        if (pathInfo == null || pathInfo.equals("/")) {
+
+            entityManager.getTransaction().begin();
+            Query q1 = entityManager.createQuery("DELETE FROM Beer");
+            Query q2 = entityManager.createQuery("DELETE FROM Brewery");
+            q1.executeUpdate();
+            q2.executeUpdate();
+            entityManager.getTransaction().commit();
+            resp.sendRedirect("/breweries/");
+
+        // Delete one brewery
+        } else {
+
+        }
+
+    }
+
     private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectMapper mapper = new ObjectMapper();
