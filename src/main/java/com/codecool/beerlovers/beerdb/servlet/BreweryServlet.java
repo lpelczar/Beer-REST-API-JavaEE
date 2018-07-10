@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet("/breweries/*")
 public class BreweryServlet extends HttpServlet {
@@ -55,7 +56,34 @@ public class BreweryServlet extends HttpServlet {
             }
             sendAsJson(resp, query.getSingleResult());
         }
+    }
 
+    // POST /breweries/ - create a new entry in collection
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            String requestBody = req
+                    .getReader()
+                    .lines()
+                    .collect(Collectors.joining(System.lineSeparator()));
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            Brewery brewery = null;
+            try {
+                brewery = mapper.readValue(requestBody, Brewery.class);
+            } catch (Exception e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }
+
+            if (brewery != null && ) {
+                entityManager.persist(brewery);
+            }
+
+        } else {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
     }
 
     private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
@@ -64,5 +92,11 @@ public class BreweryServlet extends HttpServlet {
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.writeValue(out, toJson);
         response.getWriter().write(new String(out.toByteArray()));
+    }
+
+    private boolean isBreweryInDatabase(Brewery brewery) {
+
+        Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
+        query.setParameter("id", brewery.getId());
     }
 }
