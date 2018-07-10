@@ -54,16 +54,8 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        StringBuilder jb = new StringBuilder();
-        String line;
-        try {
-            BufferedReader reader = req.getReader();
-            while ((line = reader.readLine()) != null)
-                jb.append(line);
-        } catch (Exception e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        }
-        Category category = objectMapper.readValue(jb.toString(), Category.class);
+        String json = getJson(req, resp);
+        Category category = objectMapper.readValue(json, Category.class);
         if(!isCategoryInDatabase(category.getId())) {
             em.getTransaction().begin();
             em.persist(category);
@@ -107,6 +99,20 @@ public class CategoryServlet extends HttpServlet {
         resp.sendRedirect("/categories/");
 
     }
+
+    private String getJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        try {
+            BufferedReader reader = req.getReader();
+            while ((line = reader.readLine()) != null)
+                stringBuilder.append(line);
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
+        return stringBuilder.toString();
+    }
+
 
     private boolean isCategoryInDatabase(int id){
         Query query = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
