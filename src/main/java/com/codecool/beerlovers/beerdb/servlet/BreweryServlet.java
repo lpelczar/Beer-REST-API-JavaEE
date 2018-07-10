@@ -2,6 +2,8 @@ package com.codecool.beerlovers.beerdb.servlet;
 
 
 import com.codecool.beerlovers.beerdb.model.Brewery;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -69,20 +72,26 @@ public class BreweryServlet extends HttpServlet {
                     .collect(Collectors.joining(System.lineSeparator()));
 
             ObjectMapper mapper = new ObjectMapper();
-
-            Brewery brewery = null;
+            Brewery brewery;
             try {
                 brewery = mapper.readValue(requestBody, Brewery.class);
-            } catch (Exception e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            } catch (IOException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
+                return;
             }
 
-            if (brewery != null && ) {
-                entityManager.persist(brewery);
+            if (brewery.getId() != 0) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Remove ID from your request");
+                return;
             }
+
+            entityManager.getTransaction().begin();
+            entityManager.persist(brewery);
+            entityManager.getTransaction().commit();
+            resp.sendRedirect("/breweries/" + brewery.getId());
 
         } else {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
         }
     }
 
@@ -92,11 +101,5 @@ public class BreweryServlet extends HttpServlet {
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.writeValue(out, toJson);
         response.getWriter().write(new String(out.toByteArray()));
-    }
-
-    private boolean isBreweryInDatabase(Brewery brewery) {
-
-        Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
-        query.setParameter("id", brewery.getId());
     }
 }
