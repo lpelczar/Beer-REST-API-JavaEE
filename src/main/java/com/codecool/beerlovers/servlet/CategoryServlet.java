@@ -64,7 +64,7 @@ public class CategoryServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
         Category category = objectMapper.readValue(jb.toString(), Category.class);
-        if(!isCategoryInDatabse(category.getId())) {
+        if(!isCategoryInDatabase(category.getId())) {
             em.getTransaction().begin();
             em.persist(category);
             em.getTransaction().commit();
@@ -80,8 +80,12 @@ public class CategoryServlet extends HttpServlet {
         em.getTransaction().begin();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
-            List<Category> categories = em.createQuery("SELECT c FROM Category c", Category.class).getResultList();
-            em.remove(categories);
+            Query q1 = em.createQuery("DELETE FROM Beer");
+            Query q2 = em.createQuery("DELETE FROM Style");
+            Query q3 = em.createQuery("DELETE FROM Category");
+            q1.executeUpdate();
+            q2.executeUpdate();
+            q3.executeUpdate();
             em.getTransaction().commit();
 
         }else{
@@ -90,7 +94,7 @@ public class CategoryServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
                 int id = Integer.valueOf(splits[1]);
-                if(isCategoryInDatabse(id)) {
+                if(isCategoryInDatabase(id)) {
                     Category category = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                             .setParameter("idFromURI", id).getSingleResult();
                     em.remove(category);
@@ -104,7 +108,7 @@ public class CategoryServlet extends HttpServlet {
 
     }
 
-    private boolean isCategoryInDatabse(int id){
+    private boolean isCategoryInDatabase(int id){
         Query query = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                 .setParameter("idFromURI", id);
         return (query.getResultList().size() == 1);
