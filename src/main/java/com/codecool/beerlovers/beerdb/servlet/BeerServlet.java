@@ -9,6 +9,7 @@ import javax.persistence.EntityManager;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -32,19 +33,18 @@ public class BeerServlet extends AbstractServlet {
 
 
     @Override
+    @Transactional
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String query = "SELECT b FROM Beer b WHERE b.category.id != -1 AND b.style.id != -1";
         int beerID = getIDOfBeer(req.getRequestURI());
         if (beerID > RETURN_COLLECTION) query = query + "AND b.id = " + beerID;
 
-        entityManager.getTransaction().begin();
         List<Beer> beers = entityManager
                 .createQuery(query, Beer.class).getResultList();
         resp.setContentType("application/json");
 
         String json = mapper.writeValueAsString(beers);
-        entityManager.getTransaction().commit();
 
 
         resp.getWriter().write(json);
@@ -52,30 +52,28 @@ public class BeerServlet extends AbstractServlet {
     }
 
     @Override
+    @Transactional
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String requestBody = requestToJsonString.apply(req);
 
         Beer newBeer = mapper.readValue(requestBody, Beer.class);
 
-
-        entityManager.getTransaction().begin();
+        if (entityManager.find(Beer.class, newBeer.getId()) != null) resp.sendError(409);
 
         entityManager.merge(newBeer);
 
-        entityManager.getTransaction().commit();
 
     }
 
     @Override
+    @Transactional
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
         String query = "DELETE FROM Beer";
         int beerID = getIDOfBeer(req.getRequestURI());
         if (beerID > RETURN_COLLECTION) query = query + " b WHERE b.id = " + beerID;
 
-        entityManager.getTransaction().begin();
         entityManager.createQuery(query).executeUpdate();
-        entityManager.getTransaction().commit();
     }
 
     @Override
