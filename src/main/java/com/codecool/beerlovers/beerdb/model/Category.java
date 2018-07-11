@@ -15,12 +15,26 @@ public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    int id;
 
     @Size(max = 250)
     @Column(name = "cat_name")
-    private String name;
+    String name;
 
     public Category() {
+    }
+
+    public Category(int id) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
+        EntityManager entityManager = emf.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        Category category = entityManager.find(Category.class, id);
+
+        this.id = category.id;
+        this.name = category.name;
+
+        entityManager.getTransaction().commit();
+
     }
 }
