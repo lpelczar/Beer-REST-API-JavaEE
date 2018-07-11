@@ -106,13 +106,8 @@ public class BreweryServlet extends AbstractServlet {
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            entityManager.getTransaction().begin();
-            Query q1 = entityManager.createQuery("DELETE FROM Beer");
-            Query q2 = entityManager.createQuery("DELETE FROM Brewery");
-            q1.executeUpdate();
-            q2.executeUpdate();
-            entityManager.getTransaction().commit();
-            resp.sendRedirect("/breweries/");
+            removeAllBreweries();
+            resp.sendError(HttpServletResponse.SC_ACCEPTED);
         } else {
 
             String[] splits = pathInfo.split("/");
@@ -137,6 +132,15 @@ public class BreweryServlet extends AbstractServlet {
             entityManager.getTransaction().commit();
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
+    }
+
+    private void removeAllBreweries() {
+        entityManager.getTransaction().begin();
+        Query q1 = entityManager.createQuery("DELETE FROM Beer");
+        Query q2 = entityManager.createQuery("DELETE FROM Brewery");
+        q1.executeUpdate();
+        q2.executeUpdate();
+        entityManager.getTransaction().commit();
     }
 
     private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
