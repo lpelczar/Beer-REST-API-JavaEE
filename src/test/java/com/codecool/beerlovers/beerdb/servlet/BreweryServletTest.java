@@ -184,13 +184,16 @@ class BreweryServletTest {
     @Test
     void delete_brewery_with_invalid_path_return_status_code_204() {
         when().
-                put("/breweries/").
-                then().
+                delete("/breweries/123/132").
+        then().
                 statusCode(204);
+    }
 
+    @Test
+    void delete_brewery_with_invalid_id_return_status_code_204() {
         when().
-                put("/breweries/123/132").
-                then().
+                delete("/breweries/{id}", 200000000).
+        then().
                 statusCode(204);
     }
 
