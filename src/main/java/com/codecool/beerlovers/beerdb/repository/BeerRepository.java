@@ -50,4 +50,8 @@ public class BeerRepository {
                 .createQuery("DELETE FROM Beer b WHERE b.id = " + id)
                 .executeUpdate();
     }
+
+    public int create(Beer beer) {
+        return (int) sessionFactory.getCurrentSession().save(beer);
+    }
 }
