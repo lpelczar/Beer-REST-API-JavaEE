@@ -1,9 +1,10 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Beer;
-import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
+import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 
 import javax.persistence.EntityManager;
 import javax.servlet.annotation.WebServlet;
@@ -24,7 +25,7 @@ public class BeerServlet extends AbstractServlet {
     private EntityManager entityManager;
 
     @Autowired
-    private HttpRequestToJsonString requestToJsonString;
+    private JsonUtils jsonUtils;
 
     Logger log = Logger.getLogger(getClass().getName());
 
@@ -55,14 +56,20 @@ public class BeerServlet extends AbstractServlet {
     @Transactional
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-        String requestBody = requestToJsonString.apply(req);
+        String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
+
+        if (!jsonUtils.checkJsonCompatibility(requestBody, Beer.class)) {
+            resp.sendError(HttpStatus.CONFLICT.value(), "Your request is invalid or you try to post more than one entity !");
+            return;
+        }
 
         Beer newBeer = mapper.readValue(requestBody, Beer.class);
-
-        if (entityManager.find(Beer.class, newBeer.getId()) != null) resp.sendError(409);
-
-        entityManager.merge(newBeer);
-
+        if (entityManager.find(Beer.class, newBeer.getId()) != null)
+            resp.sendError(HttpStatus.CONFLICT.value(), "This beer already exists !");
+        else {
+            entityManager.merge(newBeer);
+            resp.setStatus(HttpStatus.OK.value());
+        }
 
     }
 
