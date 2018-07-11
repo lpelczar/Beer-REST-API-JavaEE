@@ -9,18 +9,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @WebServlet("/breweries/*")
 public class BreweryServlet extends AbstractServlet {
@@ -52,7 +48,6 @@ public class BreweryServlet extends AbstractServlet {
     }
 
     @Override
-    @Transactional
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
@@ -62,7 +57,9 @@ public class BreweryServlet extends AbstractServlet {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
+            entityManager.getTransaction().begin();
             entityManager.persist(brewery);
+            entityManager.getTransaction().commit();
             resp.sendError(HttpServletResponse.SC_CREATED);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
@@ -72,44 +69,37 @@ public class BreweryServlet extends AbstractServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
+        
         if (pathInfo == null || pathInfo.equals("/")) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-        } else {
-            String[] splits = pathInfo.split("/");
-            if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-            String breweryId = splits[1];
-
-            entityManager.getTransaction().begin();
-            Brewery brewery = entityManager.find(Brewery.class, Integer.parseInt(breweryId));
-
-            if (brewery == null) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-
-            String requestBody = requestToJsonString.apply(req);
-
-            ObjectMapper mapper = new ObjectMapper();
-            Brewery mappedBrewery;
-            try {
-                mappedBrewery = mapper.readValue(requestBody, Brewery.class);
-            } catch (IOException e) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
-                return;
-            }
-
-            if (mappedBrewery.getId() != brewery.getId()) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-
-            entityManager.merge(mappedBrewery);
-            entityManager.getTransaction().commit();
-            resp.sendError(HttpServletResponse.SC_CREATED);
+            return;
         }
+
+        if (!isCorrectPath(pathInfo)) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        int breweryId = getBreweryIdFromPath(pathInfo);
+
+        if (getBreweryById(breweryId) == null) {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
+
+        String requestBody = requestToJsonString.apply(req);
+        Brewery brewery = getBreweryById(breweryId);
+        Brewery newBrewery = getBreweryFromRequestBody(requestBody);
+
+        if (newBrewery == null || newBrewery.getId() != brewery.getId()) {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
+            return;
+        }
+
+        entityManager.getTransaction().begin();
+        entityManager.merge(newBrewery);
+        entityManager.getTransaction().commit();
+        resp.sendError(HttpServletResponse.SC_CREATED);
+
     }
 
     @Override
