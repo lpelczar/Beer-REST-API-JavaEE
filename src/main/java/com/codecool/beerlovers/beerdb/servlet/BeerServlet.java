@@ -1,36 +1,35 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Beer;
+import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @WebServlet(name = "BeerServlet", urlPatterns = {"/beers", "/api/beers/*"})
-public class BeerServlet extends HttpServlet {
+public class BeerServlet extends AbstractServlet {
 
     public static final int RETURN_COLLECTION = -1;
-    private final EntityManager entityManager;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private HttpRequestToJsonString requestToJsonString;
 
     Logger log = Logger.getLogger(getClass().getName());
 
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    public BeerServlet() {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
-        this.entityManager = emf.createEntityManager();
-    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -55,10 +54,7 @@ public class BeerServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
-        String requestBody = req
-                .getReader()
-                .lines()
-                .collect(Collectors.joining(System.lineSeparator()));
+        String requestBody = requestToJsonString.apply(req);
 
         Beer newBeer = mapper.readValue(requestBody, Beer.class);
 
@@ -80,6 +76,12 @@ public class BeerServlet extends HttpServlet {
         entityManager.getTransaction().begin();
         entityManager.createQuery(query).executeUpdate();
         entityManager.getTransaction().commit();
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
+
+
     }
 
     private int getIDOfBeer(String requestURI) {
