@@ -46,12 +46,7 @@ public class Brewery {
 
     String descript;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "beers",
-            joinColumns = @JoinColumn(name = "id"),
-            inverseJoinColumns = @JoinColumn(name = "brewery_id")
-    )
+    @OneToMany(mappedBy = "brewery", cascade = CascadeType.ALL)
     List<Beer> beers;
 
     public Brewery() {
