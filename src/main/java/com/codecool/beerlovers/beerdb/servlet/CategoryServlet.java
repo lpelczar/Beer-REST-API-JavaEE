@@ -1,6 +1,5 @@
-package com.codecool.beerlovers.servlet;
+package com.codecool.beerlovers.beerdb.servlet;
 
-import com.codecool.beerlovers.beerdb.config.AppConfig;
 import com.codecool.beerlovers.beerdb.model.Category;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -8,6 +7,8 @@ import com.mysql.cj.util.StringUtils;
 
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,8 +23,15 @@ import java.util.List;
 @WebServlet("/categories/*")
 public class CategoryServlet extends HttpServlet {
 
-    private EntityManager em = new AppConfig().entityManager();
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private final EntityManager entityManager;
+
+
+    public CategoryServlet() {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
+        this.entityManager = emf.createEntityManager();
+        this.objectMapper = new ObjectMapper();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -31,7 +39,7 @@ public class CategoryServlet extends HttpServlet {
         String path = req.getPathInfo();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
-            List<Category> categories = em.createQuery("SELECT c FROM Category c", Category.class).getResultList();
+            List<Category> categories = entityManager.createQuery("SELECT c FROM Category c", Category.class).getResultList();
             resp.getWriter().write(objectMapper.writeValueAsString(categories));
 
         }else{
@@ -41,7 +49,7 @@ public class CategoryServlet extends HttpServlet {
             }else{
                 int id = Integer.valueOf(splits[1]);
                 if(isCategoryInDatabase(id)) {
-                    Category category = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+                    Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                             .setParameter("idFromURI", id).getSingleResult();
                     String catToJSON = objectMapper.writeValueAsString(category);
                     resp.getWriter().write(catToJSON);
@@ -57,9 +65,9 @@ public class CategoryServlet extends HttpServlet {
         String json = getJson(req, resp);
         Category category = objectMapper.readValue(json, Category.class);
         if(!isCategoryInDatabase(category.getId())) {
-            em.getTransaction().begin();
-            em.persist(category);
-            em.getTransaction().commit();
+            entityManager.getTransaction().begin();
+            entityManager.persist(category);
+            entityManager.getTransaction().commit();
         }else{
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -69,12 +77,12 @@ public class CategoryServlet extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getPathInfo();
-        em.getTransaction().begin();
+        entityManager.getTransaction().begin();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
-            Query query = em.createQuery("DELETE FROM Category");
+            Query query = entityManager.createQuery("DELETE FROM Category");
             query.executeUpdate();
-            em.getTransaction().commit();
+            entityManager.getTransaction().commit();
 
         }else{
             String[] splits = path.split("/");
@@ -83,10 +91,10 @@ public class CategoryServlet extends HttpServlet {
             }else{
                 int id = Integer.valueOf(splits[1]);
                 if(isCategoryInDatabase(id)) {
-                    Category category = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+                    Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                             .setParameter("idFromURI", id).getSingleResult();
-                    em.remove(category);
-                    em.getTransaction().commit();
+                    entityManager.remove(category);
+                    entityManager.getTransaction().commit();
                 }else{
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 }
@@ -101,16 +109,16 @@ public class CategoryServlet extends HttpServlet {
         String json = getJson(req, resp);
         Category category = objectMapper.readValue(json, Category.class);
         if(isCategoryInDatabase(category.getId())) {
-            em.getTransaction().begin();
-            Category updateCategory = em.find(Category.class, category.getId());
+            entityManager.getTransaction().begin();
+            Category updateCategory = entityManager.find(Category.class, category.getId());
             updateCategory.setName(category.getName());
-            em.getTransaction().commit();
+            entityManager.getTransaction().commit();
         }else if(category.getId() != 0){
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }else{
-            em.getTransaction().begin();
-            em.persist(category);
-            em.getTransaction().commit();
+            entityManager.getTransaction().begin();
+            entityManager.persist(category);
+            entityManager.getTransaction().commit();
         }
 
         resp.sendRedirect("/categories/");
@@ -131,7 +139,7 @@ public class CategoryServlet extends HttpServlet {
 
 
     private boolean isCategoryInDatabase(int id){
-        Query query = em.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+        Query query = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                 .setParameter("idFromURI", id);
         return (query.getResultList().size() == 1);
     }
