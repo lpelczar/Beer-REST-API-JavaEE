@@ -107,15 +107,28 @@ public class StyleServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = getJson(req);
-        Style style = objectMapper.readValue(json, Style.class);
-        if(isStyleInDatabase(style.getId())) {
-            entityManager.getTransaction().begin();
-            entityManager.merge(style);
-            entityManager.getTransaction().commit();
-        }else{
+        String path = req.getPathInfo();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        if (path == null || path.equals("/")) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        } else {
+            String[] splits = path.split("/");
+            if (splits.length != 2 || !StringUtils.isStrictlyNumeric(splits[1])) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            } else {
+                int id = Integer.valueOf(splits[1]);
+                String json = getJson(req);
+                Style style = objectMapper.readValue(json, Style.class);
+                if (!isStyleInDatabase(style.getId()) && style.getId() == id ) {
+                    entityManager.getTransaction().begin();
+                    entityManager.merge(style);
+                    entityManager.getTransaction().commit();
+                } else {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
+            }
         }
+
         resp.sendRedirect("/styles/");
     }
     private String getJson(HttpServletRequest req) throws IOException {
