@@ -163,4 +163,14 @@ class BreweryServletTest {
                 statusCode(204);
     }
 
+    @Test
+    void put_brewery_with_empty_body_return_status_code_204() {
+        given().
+                body("").
+        when().
+                put("/breweries/{id}", 1).
+        then().
+                statusCode(204);
+    }
+
 }
