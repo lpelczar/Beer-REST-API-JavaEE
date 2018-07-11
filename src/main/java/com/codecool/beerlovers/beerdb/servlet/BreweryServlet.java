@@ -34,24 +34,21 @@ public class BreweryServlet extends HttpServlet {
     // GET /breweries/id - retrieve one brewery by id
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
         String pathInfo = req.getPathInfo();
-        System.out.println(pathInfo);
 
         if (pathInfo == null || pathInfo.equals("/")) {
             List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
             sendAsJson(resp, breweries);
         } else {
-            String[] splits = pathInfo.split("/");
 
-            if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
+            if (!isCorrectPath(pathInfo)) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            String breweryId = splits[1];
+            
+            int breweryId = getBreweryIdFromPath(pathInfo);
             Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
-            query.setParameter("id", Integer.parseInt(breweryId));
-
+            query.setParameter("id", breweryId);
             if (query.getResultList().size() == 0) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
@@ -59,6 +56,7 @@ public class BreweryServlet extends HttpServlet {
             sendAsJson(resp, query.getSingleResult());
         }
     }
+
 
     // POST /breweries/ - create a new entry in collection
     @Override
@@ -137,6 +135,7 @@ public class BreweryServlet extends HttpServlet {
 
     // DELETE /breweries/ - delete entire collection
     // DELETE /breweries/id - delete one brewery
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
@@ -174,12 +173,21 @@ public class BreweryServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
     }
-
     private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.writeValue(out, toJson);
         response.getWriter().write(new String(out.toByteArray()));
+    }
+
+    private boolean isCorrectPath(String pathInfo) {
+        String[] splits = pathInfo.split("/");
+        return splits.length == 2 && StringUtils.isNumeric(splits[1]);
+    }
+
+    private int getBreweryIdFromPath(String pathInfo) {
+        String[] splits = pathInfo.split("/");
+        return Integer.parseInt(splits[1]);
     }
 }
