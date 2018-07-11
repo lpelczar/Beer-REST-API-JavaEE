@@ -67,12 +67,12 @@ public class StyleServlet extends HttpServlet {
         Style style = objectMapper.readValue(json, Style.class);
         if(!isStyleInDatabase(style.getId())) {
             entityManager.getTransaction().begin();
-            entityManager.persist(style);
+            entityManager.merge(style);
             entityManager.getTransaction().commit();
         }else{
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
-        resp.sendRedirect("/styles/" + style.getId());
+        resp.sendRedirect("/styles/");
     }
 
     @Override
@@ -118,7 +118,7 @@ public class StyleServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }else{
             entityManager.getTransaction().begin();
-            entityManager.persist(style);
+            entityManager.merge(style);
             entityManager.getTransaction().commit();
         }
 
