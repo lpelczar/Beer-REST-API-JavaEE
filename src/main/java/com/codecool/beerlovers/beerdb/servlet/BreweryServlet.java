@@ -1,28 +1,23 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 
+import com.codecool.beerlovers.beerdb.model.Beer;
 import com.codecool.beerlovers.beerdb.model.Brewery;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.servlet.ServletException;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,7 +93,7 @@ public class BreweryServlet extends HttpServlet {
     // DELETE /breweries/ - delete entire collection
     // DELETE /breweries/id - delete one brewery
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
 
         //Delete entire collection
@@ -115,6 +110,33 @@ public class BreweryServlet extends HttpServlet {
         // Delete one brewery
         } else {
 
+            String[] splits = pathInfo.split("/");
+
+            if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            String breweryId = splits[1];
+            Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
+            query.setParameter("id", Integer.parseInt(breweryId));
+
+            if (query.getResultList().size() == 0) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            entityManager.getTransaction().begin();
+            // Delete brewery
+            Brewery brewery = entityManager.find(Brewery.class, Integer.parseInt(breweryId));
+
+            for (Beer beer : brewery.getBeers()) {
+                System.out.println(beer);
+            }
+
+//            entityManager.remove(brewery);
+
+            entityManager.getTransaction().commit();
         }
 
     }

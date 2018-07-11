@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Entity
 @Table(name = "breweries")
@@ -44,6 +45,14 @@ public class Brewery {
     String website;
 
     String descript;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "beers",
+            joinColumns = @JoinColumn(name = "id"),
+            inverseJoinColumns = @JoinColumn(name = "brewery_id")
+    )
+    List<Beer> beers;
 
     public Brewery() {
 
