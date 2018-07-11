@@ -107,16 +107,26 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = getJson(req);
-        Category category = objectMapper.readValue(json, Category.class);
-        if(isCategoryInDatabase(category.getId())) {
-            entityManager.getTransaction().begin();
-            Category updateCategory = entityManager.find(Category.class, category.getId());
-            updateCategory.setName(category.getName());
-            entityManager.getTransaction().commit();
-        }else if(category.getId() != 0) {
+        String path = req.getPathInfo();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        if (path == null || path.equals("/")) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            resp.sendRedirect("/categories/");
+        } else {
+            String[] splits = path.split("/");
+            if (splits.length != 2 || !StringUtils.isStrictlyNumeric(splits[1])) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            } else {
+                int id = Integer.valueOf(splits[1]);
+                String json = getJson(req);
+                Category category = objectMapper.readValue(json, Category.class);
+                if (!isCategoryInDatabase(category.getId()) && category.getId() == id ) {
+                    entityManager.getTransaction().begin();
+                    entityManager.merge(category);
+                    entityManager.getTransaction().commit();
+                } else {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
+            }
         }
 
     }
