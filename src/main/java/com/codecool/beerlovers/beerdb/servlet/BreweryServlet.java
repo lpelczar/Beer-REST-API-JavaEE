@@ -33,46 +33,36 @@ public class BreweryServlet extends AbstractServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
         String pathInfo = req.getPathInfo();
-
         if (pathInfo == null || pathInfo.equals("/")) {
-
             List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
             sendAsJson(resp, breweries);
-
         } else {
-
             if (!isCorrectPath(pathInfo)) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-
             int breweryId = getBreweryIdFromPath(pathInfo);
             if (getBreweryById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-
             sendAsJson(resp, getBreweryById(breweryId));
         }
     }
 
     @Override
+    @Transactional
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-
             String requestBody = requestToJsonString.apply(req);
             Brewery brewery = getBreweryFromRequestBody(requestBody);
             if (brewery == null || brewery.getId() != 0) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
-
-            entityManager.getTransaction().begin();
             entityManager.persist(brewery);
-            entityManager.getTransaction().commit();
             resp.sendError(HttpServletResponse.SC_CREATED);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
