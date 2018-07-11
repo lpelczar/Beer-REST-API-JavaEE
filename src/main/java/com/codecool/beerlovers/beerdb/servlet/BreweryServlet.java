@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -30,8 +31,6 @@ public class BreweryServlet extends HttpServlet {
     @Autowired
     private HttpRequestToJsonString requestToJsonString;
 
-    // GET /breweries/ - list all breweries
-    // GET /breweries/id - retrieve one brewery by id
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
@@ -45,20 +44,17 @@ public class BreweryServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            
+
             int breweryId = getBreweryIdFromPath(pathInfo);
-            Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
-            query.setParameter("id", breweryId);
-            if (query.getResultList().size() == 0) {
+            if (getBreweryById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            sendAsJson(resp, query.getSingleResult());
+
+            sendAsJson(resp, getBreweryById(breweryId));
         }
     }
 
-
-    // POST /breweries/ - create a new entry in collection
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
@@ -89,7 +85,6 @@ public class BreweryServlet extends HttpServlet {
         }
     }
 
-    // PUT /breweries/id - update existing resource
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
@@ -133,9 +128,6 @@ public class BreweryServlet extends HttpServlet {
         }
     }
 
-    // DELETE /breweries/ - delete entire collection
-    // DELETE /breweries/id - delete one brewery
-
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
@@ -173,6 +165,7 @@ public class BreweryServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
     }
+
     private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectMapper mapper = new ObjectMapper();
@@ -180,7 +173,6 @@ public class BreweryServlet extends HttpServlet {
         mapper.writeValue(out, toJson);
         response.getWriter().write(new String(out.toByteArray()));
     }
-
     private boolean isCorrectPath(String pathInfo) {
         String[] splits = pathInfo.split("/");
         return splits.length == 2 && StringUtils.isNumeric(splits[1]);
@@ -189,5 +181,10 @@ public class BreweryServlet extends HttpServlet {
     private int getBreweryIdFromPath(String pathInfo) {
         String[] splits = pathInfo.split("/");
         return Integer.parseInt(splits[1]);
+    }
+
+    @Transactional
+    public Brewery getBreweryById(int breweryId) {
+        return entityManager.find(Brewery.class, breweryId);
     }
 }
