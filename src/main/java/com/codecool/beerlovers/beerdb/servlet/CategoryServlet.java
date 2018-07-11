@@ -10,14 +10,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @WebServlet("/categories/*")
@@ -34,7 +33,7 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String path = req.getPathInfo();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -52,6 +51,7 @@ public class CategoryServlet extends HttpServlet {
                     Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
                             .setParameter("idFromURI", id).getSingleResult();
                     String catToJSON = objectMapper.writeValueAsString(category);
+                    resp.setContentType("application/json");
                     resp.getWriter().write(catToJSON);
                 }else{
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -62,7 +62,8 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = getJson(req, resp);
+        String json = getJson(req);
+
         Category category = objectMapper.readValue(json, Category.class);
         if(!isCategoryInDatabase(category.getId())) {
             entityManager.getTransaction().begin();
@@ -75,7 +76,7 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo();
         entityManager.getTransaction().begin();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -105,8 +106,8 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String json = getJson(req, resp);
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String json = getJson(req);
         Category category = objectMapper.readValue(json, Category.class);
         if(isCategoryInDatabase(category.getId())) {
             entityManager.getTransaction().begin();
@@ -124,17 +125,10 @@ public class CategoryServlet extends HttpServlet {
         resp.sendRedirect("/categories/");
 
     }
-    private String getJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        try {
-            BufferedReader reader = req.getReader();
-            while ((line = reader.readLine()) != null)
-                stringBuilder.append(line);
-        } catch (Exception e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        }
-        return stringBuilder.toString();
+    private String getJson(HttpServletRequest req) throws IOException {
+        return req.getReader()
+            .lines()
+            .collect(Collectors.joining(System.lineSeparator()));
     }
 
 
