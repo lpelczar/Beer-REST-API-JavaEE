@@ -34,7 +34,7 @@ public class BreweryServlet extends AbstractServlet {
             List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
             sendAsJson(resp, breweries);
         } else {
-            if (!isCorrectPath(pathInfo)) {
+            if (isNotCorrectPath(pathInfo)) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
@@ -69,13 +69,13 @@ public class BreweryServlet extends AbstractServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
-        
+
         if (pathInfo == null || pathInfo.equals("/")) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
 
-        if (!isCorrectPath(pathInfo)) {
+        if (isNotCorrectPath(pathInfo)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
@@ -99,7 +99,6 @@ public class BreweryServlet extends AbstractServlet {
         entityManager.merge(newBrewery);
         entityManager.getTransaction().commit();
         resp.sendError(HttpServletResponse.SC_CREATED);
-
     }
 
     @Override
@@ -148,9 +147,9 @@ public class BreweryServlet extends AbstractServlet {
         response.getWriter().write(new String(out.toByteArray()));
     }
 
-    private boolean isCorrectPath(String pathInfo) {
+    private boolean isNotCorrectPath(String pathInfo) {
         String[] splits = pathInfo.split("/");
-        return splits.length == 2 && StringUtils.isNumeric(splits[1]);
+        return splits.length != 2 || !StringUtils.isNumeric(splits[1]);
     }
 
     private int getBreweryIdFromPath(String pathInfo) {
