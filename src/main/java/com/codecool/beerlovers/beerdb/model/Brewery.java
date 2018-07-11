@@ -1,6 +1,7 @@
 package com.codecool.beerlovers.beerdb.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -46,7 +47,8 @@ public class Brewery {
 
     String descript;
 
-    @OneToMany(mappedBy = "brewery", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "brewery", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     List<Beer> beers;
 
     public Brewery() {
