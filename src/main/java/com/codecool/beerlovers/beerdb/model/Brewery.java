@@ -3,14 +3,17 @@ package com.codecool.beerlovers.beerdb.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Entity
 @Table(name = "breweries")
 @Setter
 @Getter
+@ToString
 public class Brewery {
 
     @Id
@@ -42,6 +45,9 @@ public class Brewery {
     String website;
 
     String descript;
+
+    @OneToMany(mappedBy = "brewery", cascade = CascadeType.ALL)
+    List<Beer> beers;
 
     public Brewery() {
 
