@@ -1,7 +1,6 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 
-import com.codecool.beerlovers.beerdb.model.Beer;
 import com.codecool.beerlovers.beerdb.model.Brewery;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -10,8 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -96,9 +93,7 @@ public class BreweryServlet extends HttpServlet {
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
 
-        //Delete entire collection
         if (pathInfo == null || pathInfo.equals("/")) {
-
             entityManager.getTransaction().begin();
             Query q1 = entityManager.createQuery("DELETE FROM Beer");
             Query q2 = entityManager.createQuery("DELETE FROM Brewery");
@@ -106,8 +101,6 @@ public class BreweryServlet extends HttpServlet {
             q2.executeUpdate();
             entityManager.getTransaction().commit();
             resp.sendRedirect("/breweries/");
-
-        // Delete one brewery
         } else {
 
             String[] splits = pathInfo.split("/");
@@ -127,15 +120,8 @@ public class BreweryServlet extends HttpServlet {
             }
 
             entityManager.getTransaction().begin();
-            // Delete brewery
             Brewery brewery = entityManager.find(Brewery.class, Integer.parseInt(breweryId));
-
-            for (Beer beer : brewery.getBeers()) {
-                System.out.println(beer);
-            }
-
-//            entityManager.remove(brewery);
-
+            entityManager.remove(brewery);
             entityManager.getTransaction().commit();
         }
 
