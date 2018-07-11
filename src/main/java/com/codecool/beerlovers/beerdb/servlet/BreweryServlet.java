@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -68,22 +69,21 @@ public class BreweryServlet extends HttpServlet {
             try {
                 brewery = mapper.readValue(requestBody, Brewery.class);
             } catch (IOException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JSON format");
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
                 return;
             }
 
             if (brewery.getId() != 0) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Remove ID from your request");
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Remove ID from your request");
                 return;
             }
 
             entityManager.getTransaction().begin();
             entityManager.persist(brewery);
             entityManager.getTransaction().commit();
-            resp.sendRedirect("/breweries/" + brewery.getId());
-
+            resp.sendError(HttpServletResponse.SC_CREATED);
         } else {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
         }
     }
 
@@ -106,7 +106,7 @@ public class BreweryServlet extends HttpServlet {
             String[] splits = pathInfo.split("/");
 
             if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
 
@@ -115,7 +115,7 @@ public class BreweryServlet extends HttpServlet {
             query.setParameter("id", Integer.parseInt(breweryId));
 
             if (query.getResultList().size() == 0) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
 
@@ -123,8 +123,8 @@ public class BreweryServlet extends HttpServlet {
             Brewery brewery = entityManager.find(Brewery.class, Integer.parseInt(breweryId));
             entityManager.remove(brewery);
             entityManager.getTransaction().commit();
+            resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
-
     }
 
     private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
