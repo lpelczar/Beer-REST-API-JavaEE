@@ -32,4 +32,12 @@ class BreweryServletTest {
                 statusCode(404);
     }
 
+    @Test
+    void get_breweries_resource_returns_status_code_200() {
+        when().
+                get("/breweries/").
+                then().
+                statusCode(200);
+    }
+
 }
