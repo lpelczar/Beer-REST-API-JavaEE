@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @WebServlet("/breweries/*")
-public class BreweryServlet extends HttpServlet {
+public class BreweryServlet extends AbstractServlet {
 
     @Autowired
     private EntityManager entityManager;
@@ -33,11 +33,14 @@ public class BreweryServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
+
             List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
             sendAsJson(resp, breweries);
+
         } else {
 
             if (!isCorrectPath(pathInfo)) {
@@ -61,18 +64,9 @@ public class BreweryServlet extends HttpServlet {
         if (pathInfo == null || pathInfo.equals("/")) {
 
             String requestBody = requestToJsonString.apply(req);
-
-            ObjectMapper mapper = new ObjectMapper();
-            Brewery brewery;
-            try {
-                brewery = mapper.readValue(requestBody, Brewery.class);
-            } catch (IOException e) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
-                return;
-            }
-
-            if (brewery.getId() != 0) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Remove ID from your request");
+            Brewery brewery = getBreweryFromRequestBody(requestBody);
+            if (brewery == null || brewery.getId() != 0) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
 
@@ -173,6 +167,7 @@ public class BreweryServlet extends HttpServlet {
         mapper.writeValue(out, toJson);
         response.getWriter().write(new String(out.toByteArray()));
     }
+
     private boolean isCorrectPath(String pathInfo) {
         String[] splits = pathInfo.split("/");
         return splits.length == 2 && StringUtils.isNumeric(splits[1]);
@@ -186,5 +181,16 @@ public class BreweryServlet extends HttpServlet {
     @Transactional
     public Brewery getBreweryById(int breweryId) {
         return entityManager.find(Brewery.class, breweryId);
+    }
+
+    private Brewery getBreweryFromRequestBody(String requestBody) {
+        ObjectMapper mapper = new ObjectMapper();
+        Brewery brewery;
+        try {
+            brewery = mapper.readValue(requestBody, Brewery.class);
+        } catch (IOException e) {
+            return null;
+        }
+        return brewery;
     }
 }
