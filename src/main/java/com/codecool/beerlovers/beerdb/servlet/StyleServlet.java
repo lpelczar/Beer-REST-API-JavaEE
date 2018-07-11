@@ -111,19 +111,12 @@ public class StyleServlet extends HttpServlet {
         Style style = objectMapper.readValue(json, Style.class);
         if(isStyleInDatabase(style.getId())) {
             entityManager.getTransaction().begin();
-            Style updateStyle = entityManager.find(Style.class, style.getId());
-            updateStyle.setName(style.getName());
-            entityManager.getTransaction().commit();
-        }else if(style.getId() != 0){
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        }else{
-            entityManager.getTransaction().begin();
             entityManager.merge(style);
             entityManager.getTransaction().commit();
+        }else{
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
-
         resp.sendRedirect("/styles/");
-
     }
     private String getJson(HttpServletRequest req) throws IOException {
         return req.getReader()

@@ -114,15 +114,10 @@ public class CategoryServlet extends HttpServlet {
             Category updateCategory = entityManager.find(Category.class, category.getId());
             updateCategory.setName(category.getName());
             entityManager.getTransaction().commit();
-        }else if(category.getId() != 0){
+        }else if(category.getId() != 0) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        }else{
-            entityManager.getTransaction().begin();
-            entityManager.persist(category);
-            entityManager.getTransaction().commit();
+            resp.sendRedirect("/categories/");
         }
-
-        resp.sendRedirect("/categories/");
 
     }
     private String getJson(HttpServletRequest req) throws IOException {
