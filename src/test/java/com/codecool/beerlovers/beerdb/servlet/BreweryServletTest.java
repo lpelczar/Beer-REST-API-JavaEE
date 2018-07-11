@@ -59,7 +59,7 @@ class BreweryServletTest {
     }
 
     @Test
-    void post_invalid_brewery_with_id_return_status_code_204() {
+    void post_invalid_brewery_return_status_code_204() {
 
         String jsonBrewery = "{\"name\" : \"(512) New Company\", \"address1\" : \"407 Radam, F200\", " +
                 "\"city\" : \"Austin\", \"state\" : \"Texas\", \"code\" : \"78745\", \"country\" : \"United States\", " +
@@ -88,6 +88,14 @@ class BreweryServletTest {
                 .body(jsonBrewery).
         when().
                 post("/breweries/").
+        then().
+                statusCode(204);
+    }
+
+    @Test
+    void post_with_invalid_path_return_status_code_204() {
+        when().
+                post("/breweries/323").
         then().
                 statusCode(204);
     }
