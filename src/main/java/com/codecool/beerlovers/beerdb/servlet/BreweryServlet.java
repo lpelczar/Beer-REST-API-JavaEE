@@ -143,6 +143,7 @@ public class BreweryServlet extends AbstractServlet {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.writeValue(out, toJson);
+        response.setContentType("application/json");
         response.getWriter().write(new String(out.toByteArray()));
     }
 
