@@ -2,6 +2,7 @@ package com.codecool.beerlovers.beerdb.servlet;
 
 import org.junit.jupiter.api.Test;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.hamcrest.core.Is.is;
 
@@ -40,4 +41,20 @@ class BreweryServletTest {
                 statusCode(200);
     }
 
+    @Test
+    void post_brewery_return_status_code_201() {
+
+        String jsonBrewery = "{ \"name\" : \"(512) New Company\", \"address1\" : \"407 Radam, F200\", " +
+                "\"city\" : \"Austin\", \"state\" : \"Texas\", \"code\" : \"78745\", \"country\" : \"United States\", " +
+                "\"phone\" : \"512.707.2337\", \"website\" : \"http://512brewing.com/\", \"descript\" : \"(512) Brewing"+
+                " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
+                "local, domestic and organic ingredients as possible.\" }";
+
+        given()
+                .body(jsonBrewery).
+        when().
+                post("/breweries/").
+        then().
+                statusCode(201);
+    }
 }
