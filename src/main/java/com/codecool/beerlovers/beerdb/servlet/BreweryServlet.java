@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -85,6 +84,55 @@ public class BreweryServlet extends HttpServlet {
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
         }
+    }
+
+    // PUT /breweries/id - update existing resource
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+        } else {
+            String[] splits = pathInfo.split("/");
+            if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+                return;
+            }
+            String breweryId = splits[1];
+
+            entityManager.getTransaction().begin();
+            Brewery brewery = entityManager.find(Brewery.class, Integer.parseInt(breweryId));
+
+            if (brewery == null) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+                return;
+            }
+
+            String requestBody = req
+                    .getReader()
+                    .lines()
+                    .collect(Collectors.joining(System.lineSeparator()));
+
+            ObjectMapper mapper = new ObjectMapper();
+            Brewery mappedBrewery;
+            try {
+                mappedBrewery = mapper.readValue(requestBody, Brewery.class);
+            } catch (IOException e) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
+                return;
+            }
+
+            if (mappedBrewery.getId() != brewery.getId()) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+                return;
+            }
+
+            entityManager.getTransaction().begin();
+            entityManager.persist(mappedBrewery);
+            entityManager.getTransaction().commit();
+            resp.sendError(HttpServletResponse.SC_CREATED);
+        }
+
     }
 
     // DELETE /breweries/ - delete entire collection
