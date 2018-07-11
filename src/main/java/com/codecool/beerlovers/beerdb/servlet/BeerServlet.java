@@ -65,7 +65,9 @@ public class BeerServlet extends AbstractServlet {
         if (beerRepository.getById(newBeer.getId()) != null)
             resp.sendError(HttpStatus.CONFLICT.value(), "This beer already exists !");
         else {
-            beerRepository.update(newBeer);
+            beerRepository.create(newBeer);
+            log.info(String.valueOf(newBeer.getId()));
+            resp.getWriter().write(String.valueOf(newBeer.getId()));
             resp.setStatus(HttpStatus.OK.value());
         }
     }
