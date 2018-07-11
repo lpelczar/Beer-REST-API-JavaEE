@@ -55,4 +55,27 @@ public class Brewery {
 
     }
 
+    public Brewery(int id) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
+        EntityManager entityManager = emf.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        Brewery brewery = entityManager.find(Brewery.class, id);
+
+        this.id = brewery.id;
+        this.name = brewery.name;
+        this.address1 = brewery.address1;
+        this.city = brewery.city;
+        this.state = brewery.state;
+        this.code = brewery.code;
+        this.country = brewery.country;
+        this.phone = brewery.phone;
+        this.website = brewery.website;
+        this.descript = brewery.descript;
+
+
+        entityManager.getTransaction().commit();
+
+    }
+
 }

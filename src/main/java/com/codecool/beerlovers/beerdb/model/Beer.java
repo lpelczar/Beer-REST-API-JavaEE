@@ -21,7 +21,7 @@ public class Beer {
     @JoinColumn(name = "brewery_id")
     private Brewery brewery;
 
-    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "cat_id")
     private Category category;
 

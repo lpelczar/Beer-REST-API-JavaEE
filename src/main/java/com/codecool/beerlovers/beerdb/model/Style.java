@@ -26,4 +26,19 @@ public class Style {
 
     public Style() {
     }
+
+    public Style(int id) {
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
+        EntityManager entityManager = emf.createEntityManager();
+        entityManager.getTransaction().begin();
+
+        Style style = entityManager.find(Style.class, id);
+
+        this.id = style.id;
+        this.name = style.name;
+        this.category = style.category;
+
+        entityManager.getTransaction().commit();
+
+    }
 }
