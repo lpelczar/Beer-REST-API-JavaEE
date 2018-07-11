@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -127,12 +128,10 @@ public class BreweryServlet extends HttpServlet {
                 return;
             }
 
-            entityManager.getTransaction().begin();
-            entityManager.persist(mappedBrewery);
+            entityManager.merge(mappedBrewery);
             entityManager.getTransaction().commit();
             resp.sendError(HttpServletResponse.SC_CREATED);
         }
-
     }
 
     // DELETE /breweries/ - delete entire collection
