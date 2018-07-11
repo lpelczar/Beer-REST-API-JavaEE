@@ -110,24 +110,19 @@ public class BreweryServlet extends AbstractServlet {
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         } else {
 
-            String[] splits = pathInfo.split("/");
-
-            if (splits.length != 2 || !StringUtils.isNumeric(splits[1])) {
+            if (isNotCorrectPath(pathInfo)) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
 
-            String breweryId = splits[1];
-            Query query = entityManager.createQuery("SELECT b FROM Brewery b WHERE b.id = :id", Brewery.class);
-            query.setParameter("id", Integer.parseInt(breweryId));
-
-            if (query.getResultList().size() == 0) {
+            int breweryId = getBreweryIdFromPath(pathInfo);
+            if (getBreweryById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
 
             entityManager.getTransaction().begin();
-            Brewery brewery = entityManager.find(Brewery.class, Integer.parseInt(breweryId));
+            Brewery brewery = getBreweryById(breweryId);
             entityManager.remove(brewery);
             entityManager.getTransaction().commit();
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
