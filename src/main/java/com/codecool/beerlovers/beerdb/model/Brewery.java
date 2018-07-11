@@ -47,7 +47,7 @@ public class Brewery {
 
     String descript;
 
-    @OneToMany(mappedBy = "brewery", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "brewery", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     List<Beer> beers;
 
