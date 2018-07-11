@@ -59,6 +59,23 @@ class BreweryServletTest {
     }
 
     @Test
+    void post_invalid_brewery_with_id_return_status_code_204() {
+
+        String jsonBrewery = "{\"name\" : \"(512) New Company\", \"address1\" : \"407 Radam, F200\", " +
+                "\"city\" : \"Austin\", \"state\" : \"Texas\", \"code\" : \"78745\", \"country\" : \"United States\", " +
+                "\"phone\" : \"512.707.2337\", \"website\" : \"http://512brewing.com/\", \"descript\" : \"(512) Brewing"+
+                " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
+                "local, domestic and organic ingredients as possible.\" dsda}";
+
+        given()
+                .body(jsonBrewery).
+        when().
+                post("/breweries/").
+        then().
+                statusCode(204);
+    }
+
+    @Test
     void post_brewery_with_id_return_status_code_204() {
 
         String jsonBrewery = "{\"id\" : 1, \"name\" : \"(512) New Company\", \"address1\" : \"407 Radam, F200\", " +
