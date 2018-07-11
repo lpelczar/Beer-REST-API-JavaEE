@@ -176,7 +176,7 @@ class BreweryServletTest {
     @Test
     void delete_brewery_return_status_code_202() {
         when().
-                delete("/breweries/{id}", 1).
+                delete("/breweries/3").
         then().
                 statusCode(202);
     }
@@ -196,5 +196,4 @@ class BreweryServletTest {
         then().
                 statusCode(204);
     }
-
 }
