@@ -1,6 +1,6 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
-import com.codecool.beerlovers.beerdb.model.Category;
+import com.codecool.beerlovers.beerdb.model.Style;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mysql.cj.util.StringUtils;
@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-@WebServlet("/categories/*")
-public class CategoryServlet extends HttpServlet {
+@WebServlet("/styles/*")
+public class StyleServlet extends HttpServlet {
 
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
 
 
-    public CategoryServlet() {
+    public StyleServlet() {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
         this.entityManager = emf.createEntityManager();
         this.objectMapper = new ObjectMapper();
@@ -38,8 +38,8 @@ public class CategoryServlet extends HttpServlet {
         String path = req.getPathInfo();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
-            List<Category> categories = entityManager.createQuery("SELECT c FROM Category c", Category.class).getResultList();
-            resp.getWriter().write(objectMapper.writeValueAsString(categories));
+            List<Style> styles = entityManager.createQuery("SELECT s FROM Style s", Style.class).getResultList();
+            resp.getWriter().write(objectMapper.writeValueAsString(styles));
 
         }else{
             String[] splits = path.split("/");
@@ -47,10 +47,10 @@ public class CategoryServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
                 int id = Integer.valueOf(splits[1]);
-                if(isCategoryInDatabase(id)) {
-                    Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+                if(isStyleInDatabase(id)) {
+                    Style style = entityManager.createQuery("SELECT s FROM Style s WHERE id = :idFromURI", Style.class)
                             .setParameter("idFromURI", id).getSingleResult();
-                    String catToJSON = objectMapper.writeValueAsString(category);
+                    String catToJSON = objectMapper.writeValueAsString(style);
                     resp.setContentType("application/json");
                     resp.getWriter().write(catToJSON);
                 }else{
@@ -64,15 +64,15 @@ public class CategoryServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String json = getJson(req);
 
-        Category category = objectMapper.readValue(json, Category.class);
-        if(!isCategoryInDatabase(category.getId())) {
+        Style style = objectMapper.readValue(json, Style.class);
+        if(!isStyleInDatabase(style.getId())) {
             entityManager.getTransaction().begin();
-            entityManager.persist(category);
+            entityManager.merge(style);
             entityManager.getTransaction().commit();
         }else{
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
-        resp.sendRedirect("/categories/" + category.getId());
+        resp.sendRedirect("/styles/");
     }
 
     @Override
@@ -81,7 +81,7 @@ public class CategoryServlet extends HttpServlet {
         entityManager.getTransaction().begin();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
-            Query query = entityManager.createQuery("DELETE FROM Category");
+            Query query = entityManager.createQuery("DELETE FROM Style");
             query.executeUpdate();
             entityManager.getTransaction().commit();
 
@@ -91,44 +91,42 @@ public class CategoryServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
                 int id = Integer.valueOf(splits[1]);
-                if(isCategoryInDatabase(id)) {
-                    Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+                if(isStyleInDatabase(id)) {
+                    Style style = entityManager.createQuery("SELECT s FROM Style s WHERE id = :idFromURI", Style.class)
                             .setParameter("idFromURI", id).getSingleResult();
-                    entityManager.remove(category);
+                    entityManager.remove(style);
                     entityManager.getTransaction().commit();
                 }else{
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 }
             }
         }
-        resp.sendRedirect("/categories/");
+        resp.sendRedirect("/styles/");
 
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String json = getJson(req);
-        Category category = objectMapper.readValue(json, Category.class);
-        if(isCategoryInDatabase(category.getId())) {
+        Style style = objectMapper.readValue(json, Style.class);
+        if(isStyleInDatabase(style.getId())) {
             entityManager.getTransaction().begin();
-            Category updateCategory = entityManager.find(Category.class, category.getId());
-            updateCategory.setName(category.getName());
+            entityManager.merge(style);
             entityManager.getTransaction().commit();
-        }else if(category.getId() != 0) {
+        }else{
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            resp.sendRedirect("/categories/");
         }
-
+        resp.sendRedirect("/styles/");
     }
     private String getJson(HttpServletRequest req) throws IOException {
         return req.getReader()
-            .lines()
-            .collect(Collectors.joining(System.lineSeparator()));
+                .lines()
+                .collect(Collectors.joining(System.lineSeparator()));
     }
 
 
-    private boolean isCategoryInDatabase(int id){
-        Query query = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+    private boolean isStyleInDatabase(int id){
+        Query query = entityManager.createQuery("SELECT s FROM Style s WHERE id = :idFromURI", Style.class)
                 .setParameter("idFromURI", id);
         return (query.getResultList().size() == 1);
     }
