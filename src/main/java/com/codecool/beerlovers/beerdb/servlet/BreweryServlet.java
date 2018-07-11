@@ -2,9 +2,11 @@ package com.codecool.beerlovers.beerdb.servlet;
 
 
 import com.codecool.beerlovers.beerdb.model.Brewery;
+import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
@@ -22,7 +24,11 @@ import java.util.stream.Collectors;
 @WebServlet("/breweries/*")
 public class BreweryServlet extends HttpServlet {
 
-    private EntityManager entityManager = Persistence.createEntityManagerFactory("beersJPA").createEntityManager();
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private HttpRequestToJsonString requestToJsonString;
 
     // GET /breweries/ - list all breweries
     // GET /breweries/id - retrieve one brewery by id
