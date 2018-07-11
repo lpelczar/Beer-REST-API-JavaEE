@@ -1,8 +1,6 @@
 package com.codecool.beerlovers.beerdb.config;
 
 
-import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
-import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonStringImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -19,11 +17,6 @@ public class AppConfig {
     public EntityManager entityManager() {
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
         return emf.createEntityManager();
-    }
-
-    @Bean
-    HttpRequestToJsonString requestToJsonString() {
-        return new HttpRequestToJsonStringImpl();
     }
 
 }

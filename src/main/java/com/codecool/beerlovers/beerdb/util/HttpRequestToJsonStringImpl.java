@@ -1,9 +1,12 @@
 package com.codecool.beerlovers.beerdb.util;
 
+import org.springframework.stereotype.Component;
+
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+@Component
 public class HttpRequestToJsonStringImpl implements HttpRequestToJsonString {
 
 
