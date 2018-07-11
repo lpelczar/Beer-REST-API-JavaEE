@@ -76,7 +76,7 @@ public class BreweryServlet extends AbstractServlet {
         }
 
         if (isNotCorrectPath(pathInfo)) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
         int breweryId = getBreweryIdFromPath(pathInfo);

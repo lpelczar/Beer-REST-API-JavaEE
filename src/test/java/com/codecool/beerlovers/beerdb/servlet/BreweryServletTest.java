@@ -50,8 +50,8 @@ class BreweryServletTest {
                 " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
                 "local, domestic and organic ingredients as possible.\" }";
 
-        given()
-                .body(jsonBrewery).
+        given().
+                body(jsonBrewery).
         when().
                 post("/breweries/").
         then().
@@ -67,8 +67,8 @@ class BreweryServletTest {
                 " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
                 "local, domestic and organic ingredients as possible.\" dsda}";
 
-        given()
-                .body(jsonBrewery).
+        given().
+                body(jsonBrewery).
         when().
                 post("/breweries/").
         then().
@@ -84,8 +84,8 @@ class BreweryServletTest {
                 " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
                 "local, domestic and organic ingredients as possible.\" }";
 
-        given()
-                .body(jsonBrewery).
+        given().
+                body(jsonBrewery).
         when().
                 post("/breweries/").
         then().
@@ -109,11 +109,24 @@ class BreweryServletTest {
                 " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
                 "local, domestic and organic ingredients as possible.\" }";
 
-        given()
-                .body(jsonBrewery).
+        given().
+                body(jsonBrewery).
         when().
                 put("/breweries/{id}", 1).
         then().
                 statusCode(201);
+    }
+
+    @Test
+    void put_brewery_invalid_path_return_status_code_204() {
+        when().
+                put("/breweries/").
+        then().
+                statusCode(204);
+
+        when().
+                put("/breweries").
+                then().
+                statusCode(204);
     }
 }
