@@ -65,10 +65,8 @@ public class BreweryServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            String requestBody = req
-                    .getReader()
-                    .lines()
-                    .collect(Collectors.joining(System.lineSeparator()));
+
+            String requestBody = requestToJsonString.apply(req);
 
             ObjectMapper mapper = new ObjectMapper();
             Brewery brewery;
@@ -115,10 +113,7 @@ public class BreweryServlet extends HttpServlet {
                 return;
             }
 
-            String requestBody = req
-                    .getReader()
-                    .lines()
-                    .collect(Collectors.joining(System.lineSeparator()));
+            String requestBody = requestToJsonString.apply(req);
 
             ObjectMapper mapper = new ObjectMapper();
             Brewery mappedBrewery;
