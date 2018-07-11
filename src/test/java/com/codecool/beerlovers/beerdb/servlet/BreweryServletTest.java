@@ -99,4 +99,21 @@ class BreweryServletTest {
         then().
                 statusCode(204);
     }
+
+    @Test
+    void put_brewery_return_status_code_201() {
+
+        String jsonBrewery = "{\"id\" : 1, \"name\" : \"Nowe\", \"address1\" : \"407 Radam, F200\", " +
+                "\"city\" : \"Austin\", \"state\" : \"Texas\", \"code\" : \"78745\", \"country\" : \"United States\", " +
+                "\"phone\" : \"512.707.2337\", \"website\" : \"http://512brewing.com/\", \"descript\" : \"(512) Brewing"+
+                " Company is a microbrewery located in the heart of Austin that brews for the community using as many " +
+                "local, domestic and organic ingredients as possible.\" }";
+
+        given()
+                .body(jsonBrewery).
+        when().
+                put("/breweries/{id}", 1).
+        then().
+                statusCode(201);
+    }
 }
