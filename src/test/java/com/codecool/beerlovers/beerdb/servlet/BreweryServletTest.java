@@ -101,7 +101,7 @@ class BreweryServletTest {
     }
 
     @Test
-    void put_brewery_return_status_code_201() {
+    void put_correct_brewery_return_status_code_201() {
 
         String jsonBrewery = "{\"id\" : 1, \"name\" : \"Nowe\", \"address1\" : \"407 Radam, F200\", " +
                 "\"city\" : \"Austin\", \"state\" : \"Texas\", \"code\" : \"78745\", \"country\" : \"United States\", " +
@@ -172,5 +172,14 @@ class BreweryServletTest {
         then().
                 statusCode(204);
     }
+
+    @Test
+    void delete_brewery_return_status_code_202() {
+        when().
+                delete("/breweries/{id}", 1).
+        then().
+                statusCode(202);
+    }
+
 
 }
