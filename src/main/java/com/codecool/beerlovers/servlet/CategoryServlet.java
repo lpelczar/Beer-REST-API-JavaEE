@@ -53,7 +53,7 @@ public class CategoryServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String json = getJson(req, resp);
         Category category = objectMapper.readValue(json, Category.class);
         if(!isCategoryInDatabase(category.getId())) {
@@ -72,12 +72,8 @@ public class CategoryServlet extends HttpServlet {
         em.getTransaction().begin();
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
-            Query q1 = em.createQuery("DELETE FROM Beer");
-            Query q2 = em.createQuery("DELETE FROM Style");
-            Query q3 = em.createQuery("DELETE FROM Category");
-            q1.executeUpdate();
-            q2.executeUpdate();
-            q3.executeUpdate();
+            Query query = em.createQuery("DELETE FROM Category");
+            query.executeUpdate();
             em.getTransaction().commit();
 
         }else{
@@ -109,9 +105,16 @@ public class CategoryServlet extends HttpServlet {
             Category updateCategory = em.find(Category.class, category.getId());
             updateCategory.setName(category.getName());
             em.getTransaction().commit();
-        }else{
+        }else if(category.getId() != 0){
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }else{
+            em.getTransaction().begin();
+            em.persist(category);
+            em.getTransaction().commit();
         }
+
+        resp.sendRedirect("/categories/");
+
     }
     private String getJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
