@@ -1,11 +1,10 @@
-DROP DATABASE if exists `beers`;
 CREATE DATABASE  IF NOT EXISTS `beers` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `beers`;
 -- MySQL dump 10.13  Distrib 5.7.22, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: beers
+-- Host: localhost    Database: beers
 -- ------------------------------------------------------
--- Server version	5.7.22-0ubuntu18.04.1
+-- Server version	5.7.22-0ubuntu0.16.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -127,6 +126,8 @@ BEGIN
     IF old.id = 11 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'This category cannot be deleted !';
     END IF;
+    UPDATE `beers` SET `cat_id` = 11 WHERE `cat_id` = OLD.id;
+    UPDATE `styles` SET `cat_id` = 11 WHERE `cat_id` = OLD.id;
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -175,20 +176,13 @@ BEGIN
     IF old.id = 132 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'This style cannot be deleted !';
     END IF;
+    UPDATE `beers` SET `style_id` = 132 WHERE `style_id` = OLD.id;
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Dumping events for database 'beers'
---
-
---
--- Dumping routines for database 'beers'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -199,4 +193,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-07-11  9:18:00
+-- Dump completed on 2018-07-12 12:05:16
