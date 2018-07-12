@@ -1,6 +1,5 @@
 package com.codecool.beerlovers.beerdb.util;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
@@ -24,10 +23,8 @@ public class JsonUtilsImpl implements JsonUtils {
     }
 
     @Override
-    public boolean checkJsonCompatibility(String jsonStr, Class<?> valueType) throws IOException {
-
+    public boolean checkJsonCompatibility(String jsonStr, Class<?> valueType) {
         ObjectMapper mapper = new ObjectMapper();
-
         try {
             mapper.readValue(jsonStr, valueType);
             return true;
