@@ -2,7 +2,7 @@ package com.codecool.beerlovers.beerdb.servlet;
 
 
 import com.codecool.beerlovers.beerdb.model.Brewery;
-import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
+import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +25,7 @@ public class BreweryServlet extends AbstractServlet {
     private EntityManager entityManager;
 
     @Autowired
-    private HttpRequestToJsonString requestToJsonString;
+    private JsonUtils requestToJsonString;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -51,7 +51,7 @@ public class BreweryServlet extends AbstractServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            String requestBody = requestToJsonString.apply(req);
+            String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
             Brewery brewery = getBreweryFromRequestBody(requestBody);
             if (brewery == null || brewery.getId() != 0) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
@@ -86,7 +86,7 @@ public class BreweryServlet extends AbstractServlet {
             return;
         }
 
-        String requestBody = requestToJsonString.apply(req);
+        String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
         Brewery brewery = getBreweryById(breweryId);
         Brewery newBrewery = getBreweryFromRequestBody(requestBody);
 
