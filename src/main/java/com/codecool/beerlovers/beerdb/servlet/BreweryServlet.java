@@ -92,10 +92,7 @@ public class BreweryServlet extends AbstractServlet {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
             return;
         }
-
-        entityManager.getTransaction().begin();
-        entityManager.merge(newBrewery);
-        entityManager.getTransaction().commit();
+        breweryRepository.update(newBrewery);
         resp.sendError(HttpServletResponse.SC_CREATED);
     }
 

@@ -8,4 +8,5 @@ public interface BreweryRepository {
 
     List<Brewery> getAll();
     int create(Brewery brewery);
+    void update(Brewery brewery);
 }

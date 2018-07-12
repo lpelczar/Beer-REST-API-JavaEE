@@ -28,4 +28,9 @@ public class BreweryRepositoryImpl implements BreweryRepository {
     public int create(Brewery brewery) {
         return (int) sessionFactory.getCurrentSession().save(brewery);
     }
+
+    @Override
+    public void update(Brewery brewery) {
+        sessionFactory.getCurrentSession().merge(brewery);
+    }
 }
