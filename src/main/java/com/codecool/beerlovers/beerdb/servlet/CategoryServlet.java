@@ -1,7 +1,8 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Category;
-import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
+import com.codecool.beerlovers.beerdb.util.JsonUtils;
+import com.codecool.beerlovers.beerdb.util.JsonUtilsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mysql.cj.util.StringUtils;
@@ -27,8 +28,7 @@ public class CategoryServlet extends AbstractServlet {
     @Autowired
     private EntityManager entityManager;
 
-    @Autowired
-    private HttpRequestToJsonString requestToJsonString;
+    private JsonUtils jsonUtils = new JsonUtilsImpl();
 
 
     @Override
@@ -59,7 +59,7 @@ public class CategoryServlet extends AbstractServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = requestToJsonString.apply(req);
+        String json = jsonUtils.getStringFromHttpServletRequest(req);
 
         Category category = objectMapper.readValue(json, Category.class);
         if(!isCategoryInDatabase(category.getId())) {
@@ -113,7 +113,7 @@ public class CategoryServlet extends AbstractServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             } else {
                 int id = Integer.valueOf(splits[1]);
-                String json = requestToJsonString.apply(req);
+                String json =  jsonUtils.getStringFromHttpServletRequest(req);
                 Category category = objectMapper.readValue(json, Category.class);
                 if (!isCategoryInDatabase(category.getId()) && category.getId() == id ) {
                     entityManager.getTransaction().begin();

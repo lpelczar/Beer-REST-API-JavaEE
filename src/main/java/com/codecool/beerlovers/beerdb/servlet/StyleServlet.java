@@ -1,6 +1,8 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Style;
+import com.codecool.beerlovers.beerdb.util.JsonUtils;
+import com.codecool.beerlovers.beerdb.util.JsonUtilsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mysql.cj.util.StringUtils;
@@ -14,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @WebServlet("/styles/*")
@@ -24,6 +25,9 @@ public class StyleServlet extends AbstractServlet {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private JsonUtils jsonUtils;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -54,7 +58,9 @@ public class StyleServlet extends AbstractServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = getJson(req);
+        String json = jsonUtils.getStringFromHttpServletRequest(req);
+
+
 
         Style style = objectMapper.readValue(json, Style.class);
         if(!isStyleInDatabase(style.getId())) {
@@ -108,7 +114,7 @@ public class StyleServlet extends AbstractServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             } else {
                 int id = Integer.valueOf(splits[1]);
-                String json = getJson(req);
+                String json = jsonUtils.getStringFromHttpServletRequest(req);
                 Style style = objectMapper.readValue(json, Style.class);
                 if (!isStyleInDatabase(style.getId()) && style.getId() == id ) {
                     entityManager.getTransaction().begin();
@@ -122,12 +128,6 @@ public class StyleServlet extends AbstractServlet {
 
         resp.sendRedirect("/styles/");
     }
-    private String getJson(HttpServletRequest req) throws IOException {
-        return req.getReader()
-                .lines()
-                .collect(Collectors.joining(System.lineSeparator()));
-    }
-
 
     private boolean isStyleInDatabase(int id){
         Query query = entityManager.createQuery("SELECT s FROM Style s WHERE s.id = :idFromURI", Style.class)
