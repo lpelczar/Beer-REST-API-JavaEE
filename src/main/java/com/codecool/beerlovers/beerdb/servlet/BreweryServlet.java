@@ -2,6 +2,7 @@ package com.codecool.beerlovers.beerdb.servlet;
 
 
 import com.codecool.beerlovers.beerdb.model.Brewery;
+import com.codecool.beerlovers.beerdb.repository.BreweryRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -22,7 +23,7 @@ import java.util.List;
 public class BreweryServlet extends AbstractServlet {
 
     @Autowired
-    private EntityManager entityManager;
+    private BreweryRepository breweryRepository;
 
     @Autowired
     private JsonUtils requestToJsonString;
@@ -31,7 +32,7 @@ public class BreweryServlet extends AbstractServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
+            List<Brewery> breweries = breweryRepository.getAll();
             sendAsJson(resp, breweries);
         } else {
             if (isNotCorrectPath(pathInfo)) {
