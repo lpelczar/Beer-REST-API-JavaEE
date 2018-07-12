@@ -105,6 +105,20 @@ public class CategoryServletTest {
     }
 
     @Test
+    void test_put_valid_categories_with_mismatch_id_return_204(){
+        String json = "{\n" +
+                "    \"id\": 4,\n" +
+                "    \"name\": \"German Super Ale\"\n" +
+                "}";
+        given().
+                body(json).
+                when().
+                put("/categories/3").
+                then().
+                statusCode(204);
+    }
+
+    @Test
     void put_category_invalid_path_return_status_code_204() {
         when().
                 put("/categories/").
@@ -113,6 +127,16 @@ public class CategoryServletTest {
 
         when().
                 put("/categories/123/132").
+                then().
+                statusCode(204);
+    }
+
+    @Test
+    void put_categories_with_empty_body_return_status_code_204() {
+        given().
+                body("").
+                when().
+                put("/categories/{id}", 1).
                 then().
                 statusCode(204);
     }
