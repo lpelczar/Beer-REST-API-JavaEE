@@ -1,7 +1,7 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Beer;
-import com.codecool.beerlovers.beerdb.repository.BeerRepositoryImpl;
+import com.codecool.beerlovers.beerdb.repository.BeerRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class BeerServlet extends AbstractServlet {
     public static final int RETURN_COLLECTION = -1;
 
     @Autowired
-    private BeerRepositoryImpl beerRepositoryImpl;
+    private BeerRepository beerRepository;
 
     @Autowired
     private JsonUtils jsonUtils;
@@ -42,10 +42,8 @@ public class BeerServlet extends AbstractServlet {
 
         int beerID = getIDOfBeer(req.getRequestURI());
         if (beerID > RETURN_COLLECTION) {
-            json = mapper.writeValueAsString(beerRepositoryImpl.getById(beerID));
-        } else json = mapper.writeValueAsString(beerRepositoryImpl.getAll());
-
-        List<Beer> beers = beerRepositoryImpl.getAll();
+            json = mapper.writeValueAsString(beerRepository.getById(beerID));
+        } else json = mapper.writeValueAsString(beerRepository.getAll());
 
         resp.getWriter().write(json);
 
@@ -62,10 +60,10 @@ public class BeerServlet extends AbstractServlet {
         }
 
         Beer newBeer = mapper.readValue(requestBody, Beer.class);
-        if (beerRepositoryImpl.getById(newBeer.getId()) != null)
+        if (beerRepository.getById(newBeer.getId()) != null)
             resp.sendError(HttpStatus.CONFLICT.value(), "This beer already exists !");
         else {
-            beerRepositoryImpl.create(newBeer);
+            beerRepository.create(newBeer);
             log.info(String.valueOf(newBeer.getId()));
             resp.getWriter().write(String.valueOf(newBeer.getId()));
             resp.setStatus(HttpStatus.OK.value());
@@ -75,8 +73,8 @@ public class BeerServlet extends AbstractServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
         int beerID = getIDOfBeer(req.getRequestURI());
-        if (beerID > RETURN_COLLECTION) beerRepositoryImpl.deleteById(beerID);
-        else beerRepositoryImpl.deleteAll();
+        if (beerID > RETURN_COLLECTION) beerRepository.deleteById(beerID);
+        else beerRepository.deleteAll();
     }
 
     @Override
@@ -88,9 +86,9 @@ public class BeerServlet extends AbstractServlet {
         }
         Beer beer = mapper.readValue(jsonString, Beer.class);
         beer.setId(getIDOfBeer(req.getRequestURI()));
-        if (beerRepositoryImpl.getById(beer.getId()) == null) {
+        if (beerRepository.getById(beer.getId()) == null) {
             resp.sendError(HttpStatus.CONFLICT.value(), "This beer does not exist !");
-        } else beerRepositoryImpl.update(beer);
+        } else beerRepository.update(beer);
 
     }
 
