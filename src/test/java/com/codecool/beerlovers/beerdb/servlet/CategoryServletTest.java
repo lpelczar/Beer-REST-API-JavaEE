@@ -117,5 +117,21 @@ public class CategoryServletTest {
                 statusCode(204);
     }
 
+    @Test
+    void delete_categories_with_invalid_path_return_400(){
+        when().
+            delete("/categories/11/11").
+        then().
+            statusCode(400);
+    }
+
+    @Test
+    void delete_categories_with_invalid_id_return_204(){
+        when().
+            delete("/categories/1111111111").
+        then().
+            statusCode(204);
+    }
+
 
 }
