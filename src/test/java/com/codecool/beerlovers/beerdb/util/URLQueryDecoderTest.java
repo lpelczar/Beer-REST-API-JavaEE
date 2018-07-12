@@ -16,13 +16,31 @@ class URLQueryDecoderTest {
     @BeforeEach
     public void setup() {
 
-        this.urlQueryDecoder = new URLQueryDecoder();
+        this.urlQueryDecoder = new URLQueryDecoderImpl();
     }
 
     @Test
     public void applyShouldReturnEmptyHashmapIfQueryIsInvalid() {
 
         HashMap<String, String> result = urlQueryDecoder.apply("asdasdadsd");
+
+        assertTrue(result.isEmpty());
+
+    }
+
+    @Test
+    public void applyShouldReturnEmptyHashmapIfQueryIsNull() {
+
+        HashMap<String, String> result = urlQueryDecoder.apply(null);
+
+        assertTrue(result.isEmpty());
+
+    }
+
+    @Test
+    public void applyShouldReturnEmptyHashmapIfQueryIsEmpty() {
+
+        HashMap<String, String> result = urlQueryDecoder.apply("");
 
         assertTrue(result.isEmpty());
 
