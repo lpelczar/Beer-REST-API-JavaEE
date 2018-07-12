@@ -21,7 +21,7 @@ public class BreweryServlet extends AbstractServlet {
     private BreweryRepository breweryRepository;
 
     @Autowired
-    private JsonUtils requestToJsonString;
+    private JsonUtils jsonUtils;
 
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -49,7 +49,7 @@ public class BreweryServlet extends AbstractServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
+            String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
             Brewery brewery = getBreweryFromRequestBody(requestBody);
             if (brewery == null || brewery.getId() != 0) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
@@ -82,7 +82,7 @@ public class BreweryServlet extends AbstractServlet {
             return;
         }
 
-        String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
+        String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
         Brewery brewery = breweryRepository.getById(breweryId);
         Brewery newBrewery = getBreweryFromRequestBody(requestBody);
 
