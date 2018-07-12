@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.Query;
 import java.util.List;
 
 @Repository
@@ -54,5 +55,17 @@ public class BreweryRepositoryImpl implements BreweryRepository {
         sessionFactory
                 .getCurrentSession()
                 .remove(brewery);
+    }
+
+    @Override
+    public void deleteAll() {
+        Query q1 = sessionFactory
+                .getCurrentSession()
+                .createQuery("DELETE FROM Beer");
+        Query q2 = sessionFactory
+                .getCurrentSession()
+                .createQuery("DELETE FROM Brewery");
+        q1.executeUpdate();
+        q2.executeUpdate();
     }
 }

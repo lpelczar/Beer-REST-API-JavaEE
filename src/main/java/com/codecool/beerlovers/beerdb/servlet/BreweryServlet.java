@@ -101,7 +101,7 @@ public class BreweryServlet extends AbstractServlet {
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            removeAllBreweries();
+            breweryRepository.deleteAll();
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         } else {
 
@@ -119,15 +119,6 @@ public class BreweryServlet extends AbstractServlet {
             breweryRepository.delete(brewery);
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
-    }
-
-    private void removeAllBreweries() {
-        entityManager.getTransaction().begin();
-        Query q1 = entityManager.createQuery("DELETE FROM Beer");
-        Query q2 = entityManager.createQuery("DELETE FROM Brewery");
-        q1.executeUpdate();
-        q2.executeUpdate();
-        entityManager.getTransaction().commit();
     }
 
     private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {

@@ -11,4 +11,5 @@ public interface BreweryRepository {
     void update(Brewery brewery);
     Brewery getById(int id);
     void delete(Brewery brewery);
+    void deleteAll();
 }
