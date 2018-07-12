@@ -39,7 +39,7 @@ public class StyleServlet extends AbstractServlet {
                     Style style = styleRepository.getById(id);
                     sendAsJson(resp, style);
                 }else{
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
             }
         }
@@ -53,9 +53,9 @@ public class StyleServlet extends AbstractServlet {
         if(!(styleRepository.getById(style.getId()) == null)) {
             styleRepository.create(style);
         }else{
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         }
-        resp.sendRedirect("/styles/");
+        resp.sendError(HttpServletResponse.SC_CREATED);
     }
 
     @Override
@@ -72,12 +72,12 @@ public class StyleServlet extends AbstractServlet {
                 if(!(styleRepository.getById(id) == null)) {
                     Style style = styleRepository.getById(id);
                     styleRepository.delete(style);
+                    resp.sendError(HttpServletResponse.SC_ACCEPTED);
                 }else{
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 }
             }
         }
-        resp.sendRedirect("/styles/");
 
     }
 
@@ -92,8 +92,9 @@ public class StyleServlet extends AbstractServlet {
             Style style = objectMapper.readValue(json, Style.class);
             if (!(styleRepository.getById(id) == null) && style.getId() == id ) {
                 styleRepository.update(style);
+                resp.sendError(HttpServletResponse.SC_CREATED);
             } else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             }
         }
 

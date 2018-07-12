@@ -54,7 +54,7 @@ public class CategoryServlet extends AbstractServlet {
         if(categoryRepository.getById(category.getId()) == null) {
             categoryRepository.create(category);
         }else{
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         }
         resp.sendError(HttpServletResponse.SC_CREATED);
     }
@@ -62,7 +62,6 @@ public class CategoryServlet extends AbstractServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo();
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
             categoryRepository.deleteAll();
         }else {
@@ -73,19 +72,17 @@ public class CategoryServlet extends AbstractServlet {
                 if (!(categoryRepository.getById(id) == null)) {
                     Category category = categoryRepository.getById(id);
                     categoryRepository.delete(category);
+                    resp.sendError(HttpServletResponse.SC_ACCEPTED);
                 } else {
                     resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 }
             }
         }
-        resp.sendRedirect("/categories/");
-
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo();
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if (isNotCorrectPath(path)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         } else {
@@ -94,7 +91,7 @@ public class CategoryServlet extends AbstractServlet {
             Category category = objectMapper.readValue(json, Category.class);
             if (!(categoryRepository.getById(id) == null) && category.getId() == id) {
                 categoryRepository.update(category);
-                resp.sendRedirect("/categories/" + category.getId());
+                resp.sendError(HttpServletResponse.SC_CREATED);
             } else {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             }
