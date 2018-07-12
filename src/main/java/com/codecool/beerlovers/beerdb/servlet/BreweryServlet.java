@@ -2,19 +2,15 @@ package com.codecool.beerlovers.beerdb.servlet;
 
 
 import com.codecool.beerlovers.beerdb.model.Brewery;
+import com.codecool.beerlovers.beerdb.repository.BreweryRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -22,16 +18,18 @@ import java.util.List;
 public class BreweryServlet extends AbstractServlet {
 
     @Autowired
-    private EntityManager entityManager;
+    private BreweryRepository breweryRepository;
 
     @Autowired
-    private JsonUtils requestToJsonString;
+    private JsonUtils jsonUtils;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            List<Brewery> breweries = entityManager.createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
+            List<Brewery> breweries = breweryRepository.getAll();
             sendAsJson(resp, breweries);
         } else {
             if (isNotCorrectPath(pathInfo)) {
@@ -39,11 +37,11 @@ public class BreweryServlet extends AbstractServlet {
                 return;
             }
             int breweryId = getBreweryIdFromPath(pathInfo);
-            if (getBreweryById(breweryId) == null) {
+            if (breweryRepository.getById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            sendAsJson(resp, getBreweryById(breweryId));
+            sendAsJson(resp, breweryRepository.getById(breweryId));
         }
     }
 
@@ -51,15 +49,13 @@ public class BreweryServlet extends AbstractServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
+            String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
             Brewery brewery = getBreweryFromRequestBody(requestBody);
             if (brewery == null || brewery.getId() != 0) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
-            entityManager.getTransaction().begin();
-            entityManager.persist(brewery);
-            entityManager.getTransaction().commit();
+            breweryRepository.create(brewery);
             resp.sendError(HttpServletResponse.SC_CREATED);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
@@ -81,23 +77,20 @@ public class BreweryServlet extends AbstractServlet {
         }
         int breweryId = getBreweryIdFromPath(pathInfo);
 
-        if (getBreweryById(breweryId) == null) {
+        if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
 
-        String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
-        Brewery brewery = getBreweryById(breweryId);
+        String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
+        Brewery brewery = breweryRepository.getById(breweryId);
         Brewery newBrewery = getBreweryFromRequestBody(requestBody);
 
         if (newBrewery == null || newBrewery.getId() != brewery.getId()) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid JSON format");
             return;
         }
-
-        entityManager.getTransaction().begin();
-        entityManager.merge(newBrewery);
-        entityManager.getTransaction().commit();
+        breweryRepository.update(newBrewery);
         resp.sendError(HttpServletResponse.SC_CREATED);
     }
 
@@ -106,7 +99,7 @@ public class BreweryServlet extends AbstractServlet {
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || pathInfo.equals("/")) {
-            removeAllBreweries();
+            breweryRepository.deleteAll();
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         } else {
 
@@ -116,35 +109,19 @@ public class BreweryServlet extends AbstractServlet {
             }
 
             int breweryId = getBreweryIdFromPath(pathInfo);
-            if (getBreweryById(breweryId) == null) {
+            if (breweryRepository.getById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
-
-            entityManager.getTransaction().begin();
-            Brewery brewery = getBreweryById(breweryId);
-            entityManager.remove(brewery);
-            entityManager.getTransaction().commit();
+            Brewery brewery = breweryRepository.getById(breweryId);
+            breweryRepository.delete(brewery);
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
     }
 
-    private void removeAllBreweries() {
-        entityManager.getTransaction().begin();
-        Query q1 = entityManager.createQuery("DELETE FROM Beer");
-        Query q2 = entityManager.createQuery("DELETE FROM Brewery");
-        q1.executeUpdate();
-        q2.executeUpdate();
-        entityManager.getTransaction().commit();
-    }
-
-    private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        mapper.writeValue(out, toJson);
-        response.setContentType("application/json");
-        response.getWriter().write(new String(out.toByteArray()));
+    private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {
+        resp.setContentType("application/json");
+        resp.getWriter().write(mapper.writeValueAsString(object));
     }
 
     private boolean isNotCorrectPath(String pathInfo) {
@@ -155,11 +132,6 @@ public class BreweryServlet extends AbstractServlet {
     private int getBreweryIdFromPath(String pathInfo) {
         String[] splits = pathInfo.split("/");
         return Integer.parseInt(splits[1]);
-    }
-
-    @Transactional
-    public Brewery getBreweryById(int breweryId) {
-        return entityManager.find(Brewery.class, breweryId);
     }
 
     private Brewery getBreweryFromRequestBody(String requestBody) {
