@@ -5,7 +5,6 @@ import com.codecool.beerlovers.beerdb.repository.StyleRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.mysql.cj.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.annotation.WebServlet;
