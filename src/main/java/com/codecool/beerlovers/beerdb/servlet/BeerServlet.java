@@ -1,11 +1,13 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Beer;
-import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
+import com.codecool.beerlovers.beerdb.repository.BeerRepositoryImpl;
+import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Repository;
 
-import javax.persistence.EntityManager;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,16 +17,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-@WebServlet(name = "BeerServlet", urlPatterns = {"/beers", "/api/beers/*"})
+@WebServlet(name = "BeerServlet", urlPatterns = {"/beers/*", "/api/beers/*"})
+@Repository
+@Transactional
 public class BeerServlet extends AbstractServlet {
 
     public static final int RETURN_COLLECTION = -1;
 
     @Autowired
-    private EntityManager entityManager;
+    private BeerRepositoryImpl beerRepositoryImpl;
 
     @Autowired
-    private HttpRequestToJsonString requestToJsonString;
+    private JsonUtils jsonUtils;
 
     Logger log = Logger.getLogger(getClass().getName());
 
@@ -33,19 +37,15 @@ public class BeerServlet extends AbstractServlet {
 
 
     @Override
-    @Transactional
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String json = "";
 
-        String query = "SELECT b FROM Beer b WHERE b.category.id != -1 AND b.style.id != -1";
         int beerID = getIDOfBeer(req.getRequestURI());
-        if (beerID > RETURN_COLLECTION) query = query + "AND b.id = " + beerID;
+        if (beerID > RETURN_COLLECTION) {
+            json = mapper.writeValueAsString(beerRepositoryImpl.getById(beerID));
+        } else json = mapper.writeValueAsString(beerRepositoryImpl.getAll());
 
-        List<Beer> beers = entityManager
-                .createQuery(query, Beer.class).getResultList();
-        resp.setContentType("application/json");
-
-        String json = mapper.writeValueAsString(beers);
-
+        List<Beer> beers = beerRepositoryImpl.getAll();
 
         resp.getWriter().write(json);
 
@@ -54,31 +54,43 @@ public class BeerServlet extends AbstractServlet {
     @Override
     @Transactional
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
 
-        String requestBody = requestToJsonString.apply(req);
+        if (!jsonUtils.checkJsonCompatibility(requestBody, Beer.class)) {
+            resp.sendError(HttpStatus.CONFLICT.value(), "Your request is invalid or you try to post more than one entity !");
+            return;
+        }
 
         Beer newBeer = mapper.readValue(requestBody, Beer.class);
-
-        if (entityManager.find(Beer.class, newBeer.getId()) != null) resp.sendError(409);
-
-        entityManager.merge(newBeer);
-
-
+        if (beerRepositoryImpl.getById(newBeer.getId()) != null)
+            resp.sendError(HttpStatus.CONFLICT.value(), "This beer already exists !");
+        else {
+            beerRepositoryImpl.create(newBeer);
+            log.info(String.valueOf(newBeer.getId()));
+            resp.getWriter().write(String.valueOf(newBeer.getId()));
+            resp.setStatus(HttpStatus.OK.value());
+        }
     }
 
     @Override
-    @Transactional
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        String query = "DELETE FROM Beer";
         int beerID = getIDOfBeer(req.getRequestURI());
-        if (beerID > RETURN_COLLECTION) query = query + " b WHERE b.id = " + beerID;
-
-        entityManager.createQuery(query).executeUpdate();
+        if (beerID > RETURN_COLLECTION) beerRepositoryImpl.deleteById(beerID);
+        else beerRepositoryImpl.deleteAll();
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
-
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String jsonString = jsonUtils.getStringFromHttpServletRequest(req);
+        if (!jsonUtils.checkJsonCompatibility(jsonString, Beer.class)) {
+            resp.sendError(HttpStatus.CONFLICT.value(), "Your request is invalid or you try to post more than one entity !");
+            return;
+        }
+        Beer beer = mapper.readValue(jsonString, Beer.class);
+        beer.setId(getIDOfBeer(req.getRequestURI()));
+        if (beerRepositoryImpl.getById(beer.getId()) == null) {
+            resp.sendError(HttpStatus.CONFLICT.value(), "This beer does not exist !");
+        } else beerRepositoryImpl.update(beer);
 
     }
 
