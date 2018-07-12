@@ -8,11 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.Query;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
 
@@ -39,11 +37,11 @@ public class BreweryServlet extends AbstractServlet {
                 return;
             }
             int breweryId = getBreweryIdFromPath(pathInfo);
-            if (getBreweryById(breweryId) == null) {
+            if (breweryRepository.getById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            sendAsJson(resp, getBreweryById(breweryId));
+            sendAsJson(resp, breweryRepository.getById(breweryId));
         }
     }
 
@@ -79,13 +77,13 @@ public class BreweryServlet extends AbstractServlet {
         }
         int breweryId = getBreweryIdFromPath(pathInfo);
 
-        if (getBreweryById(breweryId) == null) {
+        if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
 
         String requestBody = requestToJsonString.getStringFromHttpServletRequest(req);
-        Brewery brewery = getBreweryById(breweryId);
+        Brewery brewery = breweryRepository.getById(breweryId);
         Brewery newBrewery = getBreweryFromRequestBody(requestBody);
 
         if (newBrewery == null || newBrewery.getId() != brewery.getId()) {
@@ -111,7 +109,7 @@ public class BreweryServlet extends AbstractServlet {
             }
 
             int breweryId = getBreweryIdFromPath(pathInfo);
-            if (getBreweryById(breweryId) == null) {
+            if (breweryRepository.getById(breweryId) == null) {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
@@ -134,11 +132,6 @@ public class BreweryServlet extends AbstractServlet {
     private int getBreweryIdFromPath(String pathInfo) {
         String[] splits = pathInfo.split("/");
         return Integer.parseInt(splits[1]);
-    }
-
-    @Transactional
-    public Brewery getBreweryById(int breweryId) {
-        return entityManager.find(Brewery.class, breweryId);
     }
 
     private Brewery getBreweryFromRequestBody(String requestBody) {
