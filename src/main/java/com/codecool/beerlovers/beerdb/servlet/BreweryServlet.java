@@ -55,19 +55,23 @@ public class BreweryServlet extends AbstractServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) {
-            String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
-            Brewery brewery = getBreweryFromRequestBody(requestBody);
-            if (brewery == null || brewery.getId() != 0) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-            breweryRepository.create(brewery);
-            resp.sendError(HttpServletResponse.SC_CREATED);
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            handlePostingOneBrewery(path, req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
         }
+    }
+
+    private void handlePostingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
+        Brewery brewery = getBreweryFromRequestBody(requestBody);
+        if (brewery == null || brewery.getId() != 0) {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
+        breweryRepository.create(brewery);
+        resp.sendError(HttpServletResponse.SC_CREATED);
     }
 
     @Override
@@ -142,14 +146,11 @@ public class BreweryServlet extends AbstractServlet {
         return Integer.parseInt(splits[1]);
     }
 
-    private Brewery getBreweryFromRequestBody(String requestBody) {
-        ObjectMapper mapper = new ObjectMapper();
-        Brewery brewery;
-        try {
-            brewery = mapper.readValue(requestBody, Brewery.class);
-        } catch (IOException e) {
+    private Brewery getBreweryFromRequestBody(String requestBody) throws IOException {
+        if (jsonUtils.checkJsonCompatibility(requestBody, Brewery.class)) {
+            return mapper.readValue(requestBody, Brewery.class);
+        } else {
             return null;
         }
-        return brewery;
     }
 }

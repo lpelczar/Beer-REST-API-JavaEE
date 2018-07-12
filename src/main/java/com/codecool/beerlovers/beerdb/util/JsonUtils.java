@@ -9,6 +9,5 @@ import java.io.IOException;
 public interface JsonUtils {
 
     String getStringFromHttpServletRequest(HttpServletRequest request);
-
     boolean checkJsonCompatibility(String jsonStr, Class<?> valueType) throws IOException;
 }
