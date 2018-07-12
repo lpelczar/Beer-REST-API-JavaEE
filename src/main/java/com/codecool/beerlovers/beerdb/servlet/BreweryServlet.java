@@ -35,6 +35,16 @@ public class BreweryServlet extends AbstractServlet {
         }
     }
 
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            handlePostingOneBrewery(path, req, resp);
+        } else {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
+        }
+    }
+
     private void handleGettingAllBreweries(HttpServletResponse resp) throws IOException {
         List<Brewery> breweries = breweryRepository.getAll();
         sendAsJson(resp, breweries);
@@ -53,16 +63,6 @@ public class BreweryServlet extends AbstractServlet {
         sendAsJson(resp, breweryRepository.getById(breweryId));
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String path = req.getPathInfo();
-        if (path == null || path.equals("/")) {
-            handlePostingOneBrewery(path, req, resp);
-        } else {
-            resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
-        }
-    }
-
     private void handlePostingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
         Brewery brewery = getBreweryFromRequestBody(requestBody);
@@ -76,19 +76,16 @@ public class BreweryServlet extends AbstractServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-
-        if (pathInfo == null || pathInfo.equals("/")) {
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/") || isNotCorrectPath(path)) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
+        handlePuttingOneBrewery(path, req, resp);
+    }
 
-        if (isNotCorrectPath(pathInfo)) {
-            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-            return;
-        }
-        int breweryId = getBreweryIdFromPath(pathInfo);
-
+    private void handlePuttingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        int breweryId = getBreweryIdFromPath(path);
         if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
@@ -105,6 +102,7 @@ public class BreweryServlet extends AbstractServlet {
         breweryRepository.update(newBrewery);
         resp.sendError(HttpServletResponse.SC_CREATED);
     }
+
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
