@@ -27,36 +27,19 @@ public class BreweryServlet extends AbstractServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) {
-            List<Brewery> breweries = breweryRepository.getAll();
-            sendAsJson(resp, breweries);
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            handleGettingAllBreweries(resp);
         } else {
-            if (isNotCorrectPath(pathInfo)) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-                return;
-            }
-            int breweryId = getBreweryIdFromPath(pathInfo);
-            if (breweryRepository.getById(breweryId) == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-            sendAsJson(resp, breweryRepository.getById(breweryId));
+            handleGettingOneBrewery(path, resp);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) {
-            String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
-            Brewery brewery = getBreweryFromRequestBody(requestBody);
-            if (brewery == null || brewery.getId() != 0) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-            breweryRepository.create(brewery);
-            resp.sendError(HttpServletResponse.SC_CREATED);
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            handlePostingOneBrewery(path, req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
         }
@@ -64,19 +47,45 @@ public class BreweryServlet extends AbstractServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-
-        if (pathInfo == null || pathInfo.equals("/")) {
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/") || isNotCorrectPath(path)) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
+        handlePuttingOneBrewery(path, req, resp);
+    }
 
-        if (isNotCorrectPath(pathInfo)) {
+    private void handleGettingAllBreweries(HttpServletResponse resp) throws IOException {
+        List<Brewery> breweries = breweryRepository.getAll();
+        sendAsJson(resp, breweries);
+    }
+
+    private void handleGettingOneBrewery(String path, HttpServletResponse resp) throws IOException {
+        if (isNotCorrectPath(path)) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        int breweryId = getBreweryIdFromPath(path);
+        if (breweryRepository.getById(breweryId) == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        sendAsJson(resp, breweryRepository.getById(breweryId));
+    }
+
+    private void handlePostingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
+        Brewery brewery = getBreweryFromRequestBody(requestBody);
+        if (brewery == null || brewery.getId() != 0) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
-        int breweryId = getBreweryIdFromPath(pathInfo);
+        breweryRepository.create(brewery);
+        resp.sendError(HttpServletResponse.SC_CREATED);
+    }
 
+    private void handlePuttingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        int breweryId = getBreweryIdFromPath(path);
         if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
@@ -94,29 +103,36 @@ public class BreweryServlet extends AbstractServlet {
         resp.sendError(HttpServletResponse.SC_CREATED);
     }
 
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-
-        if (pathInfo == null || pathInfo.equals("/")) {
-            breweryRepository.deleteAll();
-            resp.sendError(HttpServletResponse.SC_ACCEPTED);
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            handleDeletingAllBreweries(resp);
         } else {
-
-            if (isNotCorrectPath(pathInfo)) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-
-            int breweryId = getBreweryIdFromPath(pathInfo);
-            if (breweryRepository.getById(breweryId) == null) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
-                return;
-            }
-            Brewery brewery = breweryRepository.getById(breweryId);
-            breweryRepository.delete(brewery);
-            resp.sendError(HttpServletResponse.SC_ACCEPTED);
+            handleDeletingOneBrewery(path, resp);
         }
+    }
+
+    private void handleDeletingAllBreweries(HttpServletResponse resp) throws IOException {
+        breweryRepository.deleteAll();
+        resp.sendError(HttpServletResponse.SC_ACCEPTED);
+    }
+
+    private void handleDeletingOneBrewery(String path, HttpServletResponse resp) throws IOException {
+        if (isNotCorrectPath(path)) {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
+
+        int breweryId = getBreweryIdFromPath(path);
+        if (breweryRepository.getById(breweryId) == null) {
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
+        Brewery brewery = breweryRepository.getById(breweryId);
+        breweryRepository.delete(brewery);
+        resp.sendError(HttpServletResponse.SC_ACCEPTED);
     }
 
     private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {
@@ -134,14 +150,11 @@ public class BreweryServlet extends AbstractServlet {
         return Integer.parseInt(splits[1]);
     }
 
-    private Brewery getBreweryFromRequestBody(String requestBody) {
-        ObjectMapper mapper = new ObjectMapper();
-        Brewery brewery;
-        try {
-            brewery = mapper.readValue(requestBody, Brewery.class);
-        } catch (IOException e) {
+    private Brewery getBreweryFromRequestBody(String requestBody) throws IOException {
+        if (jsonUtils.checkJsonCompatibility(requestBody, Brewery.class)) {
+            return mapper.readValue(requestBody, Brewery.class);
+        } else {
             return null;
         }
-        return brewery;
     }
 }
