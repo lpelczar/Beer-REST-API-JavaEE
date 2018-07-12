@@ -31,7 +31,7 @@ public class JsonUtilsImpl implements JsonUtils {
         try {
             mapper.readValue(jsonStr, valueType);
             return true;
-        } catch (JsonMappingException e) {
+        } catch (IOException e) {
             return false;
         }
 
