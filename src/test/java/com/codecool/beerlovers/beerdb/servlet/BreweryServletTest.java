@@ -12,7 +12,7 @@ class BreweryServletTest {
     void get_breweries_resource_returns_200_with_expected_id() {
         when().
                 get("/breweries/{id}", 5).
-                then().
+        then().
                 statusCode(200).
                 body("id", is(5));
     }
@@ -21,7 +21,7 @@ class BreweryServletTest {
     void get_breweries_resource_returns_400_when_incorrect_path() {
         when().
                 get("/breweries/test").
-                then().
+        then().
                 statusCode(400);
     }
 
@@ -29,7 +29,7 @@ class BreweryServletTest {
     void get_breweries_resource_returns_404_when_not_found() {
         when().
                 get("/breweries/{id}", 2000000000).
-                then().
+        then().
                 statusCode(404);
     }
 
@@ -37,7 +37,7 @@ class BreweryServletTest {
     void get_breweries_resource_returns_status_code_200() {
         when().
                 get("/breweries/").
-                then().
+        then().
                 statusCode(200);
     }
 
