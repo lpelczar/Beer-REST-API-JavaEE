@@ -1,5 +1,6 @@
 package com.codecool.beerlovers.beerdb.repository;
 
+import com.codecool.beerlovers.beerdb.model.Beer;
 import com.codecool.beerlovers.beerdb.model.Brewery;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +22,37 @@ public class BreweryRepositoryImpl implements BreweryRepository {
 
     @Override
     public List<Brewery> getAll() {
-        return sessionFactory.getCurrentSession().createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
+        return sessionFactory
+                .getCurrentSession()
+                .createQuery("SELECT b FROM Brewery b", Brewery.class)
+                .getResultList();
     }
 
     @Override
     public int create(Brewery brewery) {
-        return (int) sessionFactory.getCurrentSession().save(brewery);
+        return (int) sessionFactory
+                .getCurrentSession()
+                .save(brewery);
     }
 
     @Override
     public void update(Brewery brewery) {
-        sessionFactory.getCurrentSession().merge(brewery);
+        sessionFactory
+                .getCurrentSession()
+                .merge(brewery);
+    }
+
+    @Override
+    public Brewery getById(int id) {
+        return sessionFactory
+                .getCurrentSession()
+                .find(Brewery.class, id);
+    }
+
+    @Override
+    public void delete(Brewery brewery) {
+        sessionFactory
+                .getCurrentSession()
+                .remove(brewery);
     }
 }

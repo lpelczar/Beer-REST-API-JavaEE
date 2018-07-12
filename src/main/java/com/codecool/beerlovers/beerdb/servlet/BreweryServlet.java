@@ -115,11 +115,8 @@ public class BreweryServlet extends AbstractServlet {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
-
-            entityManager.getTransaction().begin();
-            Brewery brewery = getBreweryById(breweryId);
-            entityManager.remove(brewery);
-            entityManager.getTransaction().commit();
+            Brewery brewery = breweryRepository.getById(breweryId);
+            breweryRepository.delete(brewery);
             resp.sendError(HttpServletResponse.SC_ACCEPTED);
         }
     }
