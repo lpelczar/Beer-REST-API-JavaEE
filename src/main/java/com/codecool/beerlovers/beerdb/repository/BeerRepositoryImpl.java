@@ -36,7 +36,15 @@ public class BeerRepositoryImpl implements BeerRepository {
     @Override
     public List<Beer> getAll() {
         return sessionFactory.getCurrentSession()
-                .createQuery("SELECT b FROM Beer b", Beer.class)
+                .createQuery("SELECT b FROM Beer b ORDER BY b.id", Beer.class)
+                .getResultList();
+    }
+
+    @Override
+    public List<Beer> getAll(int start, int limit) {
+        return sessionFactory.getCurrentSession()
+                .createQuery("SELECT b FROM Beer b ORDER BY b.id ASC", Beer.class)
+                .setFirstResult(start).setMaxResults(limit)
                 .getResultList();
     }
 
