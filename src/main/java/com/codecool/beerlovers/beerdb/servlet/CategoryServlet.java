@@ -25,7 +25,8 @@ public class CategoryServlet extends AbstractServlet {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    private JsonUtils jsonUtils = new JsonUtilsImpl();
+    @Autowired
+    private JsonUtils jsonUtils;
 
 
     @Override
