@@ -1,36 +1,35 @@
 package com.codecool.beerlovers.beerdb.servlet;
 
 import com.codecool.beerlovers.beerdb.model.Category;
+import com.codecool.beerlovers.beerdb.util.HttpRequestToJsonString;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mysql.cj.util.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+
 import javax.persistence.Query;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @WebServlet("/categories/*")
-public class CategoryServlet extends HttpServlet {
-
-    private final ObjectMapper objectMapper;
-    private final EntityManager entityManager;
+public class CategoryServlet extends AbstractServlet {
 
 
-    public CategoryServlet() {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
-        this.entityManager = emf.createEntityManager();
-        this.objectMapper = new ObjectMapper();
-    }
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private HttpRequestToJsonString requestToJsonString;
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -40,7 +39,6 @@ public class CategoryServlet extends HttpServlet {
         if(path == null || path.equals("/")) {
             List<Category> categories = entityManager.createQuery("SELECT c FROM Category c", Category.class).getResultList();
             resp.getWriter().write(objectMapper.writeValueAsString(categories));
-
         }else{
             String[] splits = path.split("/");
             if(splits.length != 2 || !StringUtils.isStrictlyNumeric(splits[1])){
@@ -48,8 +46,7 @@ public class CategoryServlet extends HttpServlet {
             }else{
                 int id = Integer.valueOf(splits[1]);
                 if(isCategoryInDatabase(id)) {
-                    Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
-                            .setParameter("idFromURI", id).getSingleResult();
+                    Category category = entityManager.find(Category.class, id);
                     String catToJSON = objectMapper.writeValueAsString(category);
                     resp.setContentType("application/json");
                     resp.getWriter().write(catToJSON);
@@ -62,7 +59,7 @@ public class CategoryServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = getJson(req);
+        String json = requestToJsonString.apply(req);
 
         Category category = objectMapper.readValue(json, Category.class);
         if(!isCategoryInDatabase(category.getId())) {
@@ -92,8 +89,7 @@ public class CategoryServlet extends HttpServlet {
             }else{
                 int id = Integer.valueOf(splits[1]);
                 if(isCategoryInDatabase(id)) {
-                    Category category = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
-                            .setParameter("idFromURI", id).getSingleResult();
+                    Category category = entityManager.find(Category.class, id);
                     entityManager.remove(category);
                     entityManager.getTransaction().commit();
                 }else{
@@ -117,7 +113,7 @@ public class CategoryServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             } else {
                 int id = Integer.valueOf(splits[1]);
-                String json = getJson(req);
+                String json = requestToJsonString.apply(req);
                 Category category = objectMapper.readValue(json, Category.class);
                 if (!isCategoryInDatabase(category.getId()) && category.getId() == id ) {
                     entityManager.getTransaction().begin();
@@ -130,15 +126,9 @@ public class CategoryServlet extends HttpServlet {
         }
 
     }
-    private String getJson(HttpServletRequest req) throws IOException {
-        return req.getReader()
-            .lines()
-            .collect(Collectors.joining(System.lineSeparator()));
-    }
-
 
     private boolean isCategoryInDatabase(int id){
-        Query query = entityManager.createQuery("SELECT c FROM Category c WHERE id = :idFromURI", Category.class)
+        Query query = entityManager.createQuery("SELECT c FROM Category c WHERE c.id = :idFromURI", Category.class)
                 .setParameter("idFromURI", id);
         return (query.getResultList().size() == 1);
     }

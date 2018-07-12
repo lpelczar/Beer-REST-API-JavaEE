@@ -4,14 +4,12 @@ import com.codecool.beerlovers.beerdb.model.Style;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mysql.cj.util.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -20,17 +18,12 @@ import java.util.stream.Collectors;
 
 
 @WebServlet("/styles/*")
-public class StyleServlet extends HttpServlet {
+public class StyleServlet extends AbstractServlet {
 
-    private final ObjectMapper objectMapper;
-    private final EntityManager entityManager;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-
-    public StyleServlet() {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("beersJPA");
-        this.entityManager = emf.createEntityManager();
-        this.objectMapper = new ObjectMapper();
-    }
+    @Autowired
+    private EntityManager entityManager;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -48,8 +41,7 @@ public class StyleServlet extends HttpServlet {
             }else{
                 int id = Integer.valueOf(splits[1]);
                 if(isStyleInDatabase(id)) {
-                    Style style = entityManager.createQuery("SELECT s FROM Style s WHERE id = :idFromURI", Style.class)
-                            .setParameter("idFromURI", id).getSingleResult();
+                    Style style = entityManager.find(Style.class, id);
                     String catToJSON = objectMapper.writeValueAsString(style);
                     resp.setContentType("application/json");
                     resp.getWriter().write(catToJSON);
@@ -92,8 +84,7 @@ public class StyleServlet extends HttpServlet {
             }else{
                 int id = Integer.valueOf(splits[1]);
                 if(isStyleInDatabase(id)) {
-                    Style style = entityManager.createQuery("SELECT s FROM Style s WHERE id = :idFromURI", Style.class)
-                            .setParameter("idFromURI", id).getSingleResult();
+                    Style style = entityManager.find(Style.class, id);
                     entityManager.remove(style);
                     entityManager.getTransaction().commit();
                 }else{
@@ -139,7 +130,7 @@ public class StyleServlet extends HttpServlet {
 
 
     private boolean isStyleInDatabase(int id){
-        Query query = entityManager.createQuery("SELECT s FROM Style s WHERE id = :idFromURI", Style.class)
+        Query query = entityManager.createQuery("SELECT s FROM Style s WHERE s.id = :idFromURI", Style.class)
                 .setParameter("idFromURI", id);
         return (query.getResultList().size() == 1);
     }
