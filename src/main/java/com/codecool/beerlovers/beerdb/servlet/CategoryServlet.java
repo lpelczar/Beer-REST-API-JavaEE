@@ -3,8 +3,6 @@ package com.codecool.beerlovers.beerdb.servlet;
 import com.codecool.beerlovers.beerdb.model.Category;
 import com.codecool.beerlovers.beerdb.repository.CategoryRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
-import com.codecool.beerlovers.beerdb.util.JsonUtilsImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,9 +16,6 @@ import java.util.List;
 
 @WebServlet("/categories/*")
 public class CategoryServlet extends AbstractServlet {
-
-
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -40,7 +35,7 @@ public class CategoryServlet extends AbstractServlet {
             if(isNotCorrectPath(path)) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
-                int id = getCategoryIdFromPath(path);
+                int id = getIdFromPath(path);
                 if(!(categoryRepository.getById(id) == null)) {
                     Category category = categoryRepository.getById(id);
                     sendAsJson(resp, category);
@@ -74,7 +69,7 @@ public class CategoryServlet extends AbstractServlet {
             if (isNotCorrectPath(path)) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             } else {
-                int id = getCategoryIdFromPath(path);
+                int id = getIdFromPath(path);
                 if (!(categoryRepository.getById(id) == null)) {
                     Category category = categoryRepository.getById(id);
                     categoryRepository.delete(category);
@@ -94,7 +89,7 @@ public class CategoryServlet extends AbstractServlet {
         if (isNotCorrectPath(path)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         } else {
-            int id = getCategoryIdFromPath(path);
+            int id = getIdFromPath(path);
             String json = jsonUtils.getStringFromHttpServletRequest(req);
             Category category = objectMapper.readValue(json, Category.class);
             if (!(categoryRepository.getById(id) == null) && category.getId() == id) {
@@ -104,22 +99,6 @@ public class CategoryServlet extends AbstractServlet {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             }
         }
-    }
-
-    private boolean isNotCorrectPath(String pathInfo) {
-        String[] splits = pathInfo.split("/");
-        return splits.length != 2 || !org.apache.commons.lang3.StringUtils.isNumeric(splits[1]);
-    }
-
-    private int getCategoryIdFromPath(String pathInfo) {
-        String[] splits = pathInfo.split("/");
-        return Integer.parseInt(splits[1]);
-    }
-
-    private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        resp.setContentType("application/json");
-        resp.getWriter().write(objectMapper.writeValueAsString(object));
     }
 
 

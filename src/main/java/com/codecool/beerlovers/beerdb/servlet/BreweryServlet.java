@@ -4,8 +4,6 @@ package com.codecool.beerlovers.beerdb.servlet;
 import com.codecool.beerlovers.beerdb.model.Brewery;
 import com.codecool.beerlovers.beerdb.repository.BreweryRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.annotation.WebServlet;
@@ -22,8 +20,6 @@ public class BreweryServlet extends AbstractServlet {
 
     @Autowired
     private JsonUtils jsonUtils;
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -65,7 +61,7 @@ public class BreweryServlet extends AbstractServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        int breweryId = getBreweryIdFromPath(path);
+        int breweryId = getIdFromPath(path);
         if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -85,7 +81,7 @@ public class BreweryServlet extends AbstractServlet {
     }
 
     private void handlePuttingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        int breweryId = getBreweryIdFromPath(path);
+        int breweryId = getIdFromPath(path);
         if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
@@ -125,7 +121,7 @@ public class BreweryServlet extends AbstractServlet {
             return;
         }
 
-        int breweryId = getBreweryIdFromPath(path);
+        int breweryId = getIdFromPath(path);
         if (breweryRepository.getById(breweryId) == null) {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
             return;
@@ -135,24 +131,9 @@ public class BreweryServlet extends AbstractServlet {
         resp.sendError(HttpServletResponse.SC_ACCEPTED);
     }
 
-    private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {
-        resp.setContentType("application/json");
-        resp.getWriter().write(mapper.writeValueAsString(object));
-    }
-
-    private boolean isNotCorrectPath(String pathInfo) {
-        String[] splits = pathInfo.split("/");
-        return splits.length != 2 || !StringUtils.isNumeric(splits[1]);
-    }
-
-    private int getBreweryIdFromPath(String pathInfo) {
-        String[] splits = pathInfo.split("/");
-        return Integer.parseInt(splits[1]);
-    }
-
     private Brewery getBreweryFromRequestBody(String requestBody) throws IOException {
         if (jsonUtils.checkJsonCompatibility(requestBody, Brewery.class)) {
-            return mapper.readValue(requestBody, Brewery.class);
+            return objectMapper.readValue(requestBody, Brewery.class);
         } else {
             return null;
         }

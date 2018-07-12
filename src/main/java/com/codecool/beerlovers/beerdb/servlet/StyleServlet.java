@@ -3,7 +3,6 @@ package com.codecool.beerlovers.beerdb.servlet;
 import com.codecool.beerlovers.beerdb.model.Style;
 import com.codecool.beerlovers.beerdb.repository.StyleRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,8 +16,6 @@ import java.util.List;
 @WebServlet("/styles/*")
 public class StyleServlet extends AbstractServlet {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Autowired
     private JsonUtils jsonUtils;
 
@@ -29,7 +26,6 @@ public class StyleServlet extends AbstractServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String path = req.getPathInfo();
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         if(path == null || path.equals("/")) {
             List<Style> styles = styleRepository.getAll();
             sendAsJson(resp, styles);
@@ -38,7 +34,7 @@ public class StyleServlet extends AbstractServlet {
             if(isNotCorrectPath(path)){
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
-                int id = getStyleIdFromPath(path);
+                int id = getIdFromPath(path);
                 if(!(styleRepository.getById(id) == null)) {
                     Style style = styleRepository.getById(id);
                     sendAsJson(resp, style);
@@ -72,7 +68,7 @@ public class StyleServlet extends AbstractServlet {
             if(isNotCorrectPath(path)){
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }else{
-                int id = getStyleIdFromPath(path);
+                int id = getIdFromPath(path);
                 if(!(styleRepository.getById(id) == null)) {
                     Style style = styleRepository.getById(id);
                     styleRepository.delete(style);
@@ -91,7 +87,7 @@ public class StyleServlet extends AbstractServlet {
         if (isNotCorrectPath(path)) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
         } else {
-            int id = getStyleIdFromPath(path);
+            int id = getIdFromPath(path);
             String json = jsonUtils.getStringFromHttpServletRequest(req);
             Style style = objectMapper.readValue(json, Style.class);
             if (!(styleRepository.getById(id) == null) && style.getId() == id ) {
@@ -102,22 +98,6 @@ public class StyleServlet extends AbstractServlet {
         }
 
         resp.sendRedirect("/styles/");
-    }
-
-    private boolean isNotCorrectPath(String pathInfo) {
-        String[] splits = pathInfo.split("/");
-        return splits.length != 2 || !org.apache.commons.lang3.StringUtils.isNumeric(splits[1]);
-    }
-
-    private int getStyleIdFromPath(String pathInfo) {
-        String[] splits = pathInfo.split("/");
-        return Integer.parseInt(splits[1]);
-    }
-
-    private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        resp.setContentType("application/json");
-        resp.getWriter().write(objectMapper.writeValueAsString(object));
     }
 
 }
