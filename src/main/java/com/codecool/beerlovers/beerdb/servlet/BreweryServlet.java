@@ -39,7 +39,7 @@ public class BreweryServlet extends AbstractServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo();
         if (path == null || path.equals("/")) {
-            handlePostingOneBrewery(path, req, resp);
+            handlePostingOneBrewery(req, resp);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
         }
@@ -73,7 +73,7 @@ public class BreweryServlet extends AbstractServlet {
         sendAsJson(resp, breweryRepository.getById(breweryId));
     }
 
-    private void handlePostingOneBrewery(String path, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void handlePostingOneBrewery(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
         Brewery brewery = getBreweryFromRequestBody(requestBody);
         if (brewery == null || brewery.getId() != 0) {
