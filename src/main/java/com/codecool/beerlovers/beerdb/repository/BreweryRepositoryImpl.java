@@ -1,6 +1,5 @@
 package com.codecool.beerlovers.beerdb.repository;
 
-import com.codecool.beerlovers.beerdb.model.Beer;
 import com.codecool.beerlovers.beerdb.model.Brewery;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

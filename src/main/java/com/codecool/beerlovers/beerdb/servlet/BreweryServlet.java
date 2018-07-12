@@ -27,22 +27,30 @@ public class BreweryServlet extends AbstractServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) {
-            List<Brewery> breweries = breweryRepository.getAll();
-            sendAsJson(resp, breweries);
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            handleGettingAllBreweries(resp);
         } else {
-            if (isNotCorrectPath(pathInfo)) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-                return;
-            }
-            int breweryId = getBreweryIdFromPath(pathInfo);
-            if (breweryRepository.getById(breweryId) == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-            sendAsJson(resp, breweryRepository.getById(breweryId));
+            handleGettingOneBrewery(path, resp);
         }
+    }
+
+    private void handleGettingAllBreweries(HttpServletResponse resp) throws IOException {
+        List<Brewery> breweries = breweryRepository.getAll();
+        sendAsJson(resp, breweries);
+    }
+
+    private void handleGettingOneBrewery(String path, HttpServletResponse resp) throws IOException {
+        if (isNotCorrectPath(path)) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        int breweryId = getBreweryIdFromPath(path);
+        if (breweryRepository.getById(breweryId) == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+        sendAsJson(resp, breweryRepository.getById(breweryId));
     }
 
     @Override
