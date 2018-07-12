@@ -23,4 +23,9 @@ public class BreweryRepositoryImpl implements BreweryRepository {
     public List<Brewery> getAll() {
         return sessionFactory.getCurrentSession().createQuery("SELECT b FROM Brewery b", Brewery.class).getResultList();
     }
+
+    @Override
+    public int create(Brewery brewery) {
+        return (int) sessionFactory.getCurrentSession().save(brewery);
+    }
 }

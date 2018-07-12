@@ -5,17 +5,14 @@ import com.codecool.beerlovers.beerdb.model.Brewery;
 import com.codecool.beerlovers.beerdb.repository.BreweryRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -27,6 +24,8 @@ public class BreweryServlet extends AbstractServlet {
 
     @Autowired
     private JsonUtils requestToJsonString;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -58,9 +57,7 @@ public class BreweryServlet extends AbstractServlet {
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
                 return;
             }
-            entityManager.getTransaction().begin();
-            entityManager.persist(brewery);
-            entityManager.getTransaction().commit();
+            breweryRepository.create(brewery);
             resp.sendError(HttpServletResponse.SC_CREATED);
         } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT, "Invalid path");
@@ -139,13 +136,9 @@ public class BreweryServlet extends AbstractServlet {
         entityManager.getTransaction().commit();
     }
 
-    private void sendAsJson(HttpServletResponse response, Object toJson) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        mapper.writeValue(out, toJson);
-        response.setContentType("application/json");
-        response.getWriter().write(new String(out.toByteArray()));
+    private void sendAsJson(HttpServletResponse resp, Object object) throws IOException {
+        resp.setContentType("application/json");
+        resp.getWriter().write(mapper.writeValueAsString(object));
     }
 
     private boolean isNotCorrectPath(String pathInfo) {
