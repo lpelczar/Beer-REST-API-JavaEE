@@ -104,5 +104,18 @@ public class CategoryServletTest {
             statusCode(201);
     }
 
+    @Test
+    void put_category_invalid_path_return_status_code_204() {
+        when().
+                put("/categories/").
+                then().
+                statusCode(204);
+
+        when().
+                put("/categories/123/132").
+                then().
+                statusCode(204);
+    }
+
 
 }

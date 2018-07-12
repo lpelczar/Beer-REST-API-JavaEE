@@ -87,7 +87,7 @@ public class CategoryServlet extends AbstractServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo();
         if (isNotCorrectPath(path)) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         } else {
             int id = getIdFromPath(path);
 
