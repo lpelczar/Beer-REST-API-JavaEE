@@ -1,7 +1,6 @@
 package com.codecool.beerlovers.beerdb.repository;
 
 import com.codecool.beerlovers.beerdb.model.Beer;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
