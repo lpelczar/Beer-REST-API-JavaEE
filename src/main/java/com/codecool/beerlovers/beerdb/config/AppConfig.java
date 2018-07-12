@@ -23,8 +23,12 @@ import java.util.Properties;
 @EnableTransactionManagement
 public class AppConfig {
 
+    private final Environment env;
+
     @Autowired
-    Environment env;
+    public AppConfig(Environment env) {
+        this.env = env;
+    }
 
     @Bean
     public EntityManager entityManager() throws PropertyVetoException {
@@ -53,7 +57,6 @@ public class AppConfig {
         securityDataSource.setMaxIdleTime(Integer.parseInt(env.getProperty("connection.pool.maxIdleTime")));
         securityDataSource.setMaxPoolSize(Integer.parseInt(env.getProperty("connection.pool.maxPoolSize")));
 
-
         return securityDataSource;
     }
 
@@ -63,11 +66,9 @@ public class AppConfig {
 
     }
 
-    Properties hibernateProperties() {
+    private Properties hibernateProperties() {
         return new Properties() {
             {
-/*                setProperty("hibernate.hbm2ddl.auto",
-                        env.getProperty("hibernate.hbm2ddl.auto"));*/
                 setProperty("hibernate.dialect",
                         env.getProperty("hibernate.dialect"));
             }
