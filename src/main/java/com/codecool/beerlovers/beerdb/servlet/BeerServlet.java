@@ -3,7 +3,9 @@ package com.codecool.beerlovers.beerdb.servlet;
 import com.codecool.beerlovers.beerdb.model.Beer;
 import com.codecool.beerlovers.beerdb.repository.BeerRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
+import com.codecool.beerlovers.beerdb.util.URLQueryDecoder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -14,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -30,6 +33,9 @@ public class BeerServlet extends AbstractServlet {
     @Autowired
     private JsonUtils jsonUtils;
 
+    @Autowired
+    private URLQueryDecoder queryDecoder;
+
     Logger log = Logger.getLogger(getClass().getName());
 
 
@@ -39,12 +45,15 @@ public class BeerServlet extends AbstractServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String json = "";
-
+        Pair<Integer, Integer> paginationArguments = getPaginationArguments(req.getQueryString());
         int beerID = getIDOfBeer(req.getRequestURI());
         if (beerID > RETURN_COLLECTION) {
             json = mapper.writeValueAsString(beerRepository.getById(beerID));
+        } else if (paginationArguments != null) {
+            json = mapper.writeValueAsString(beerRepository.getAll(paginationArguments.getKey(), paginationArguments.getValue()));
         } else json = mapper.writeValueAsString(beerRepository.getAll());
 
+        resp.setContentType("application/json");
         resp.getWriter().write(json);
 
     }
@@ -100,5 +109,19 @@ public class BeerServlet extends AbstractServlet {
         } catch (Exception e) {
             return RETURN_COLLECTION;
         }
+    }
+
+    private Pair<Integer, Integer> getPaginationArguments(String query) {
+        HashMap<String, String> queryKeyValue = queryDecoder.apply(query);
+        Pair<Integer, Integer> result = null;
+        try {
+            int from = Integer.parseInt(queryKeyValue.get("from"));
+            int to = Integer.parseInt(queryKeyValue.get("to"));
+            result = new Pair<>(from, to);
+
+        } catch (Exception e) {
+            log.warning(e.getMessage());
+        }
+        return result;
     }
 }
