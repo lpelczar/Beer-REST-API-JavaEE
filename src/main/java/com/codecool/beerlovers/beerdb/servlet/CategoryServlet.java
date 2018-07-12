@@ -3,7 +3,6 @@ package com.codecool.beerlovers.beerdb.servlet;
 import com.codecool.beerlovers.beerdb.model.Category;
 import com.codecool.beerlovers.beerdb.repository.CategoryRepository;
 import com.codecool.beerlovers.beerdb.util.JsonUtils;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -48,15 +47,19 @@ public class CategoryServlet extends AbstractServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String json = jsonUtils.getStringFromHttpServletRequest(req);
-
-        Category category = objectMapper.readValue(json, Category.class);
-        if(categoryRepository.getById(category.getId()) == null) {
-            categoryRepository.create(category);
-        }else{
+        String path = req.getPathInfo();
+        if (path == null || path.equals("/")) {
+            String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
+            Category category = getCategoryFromRequestBody(requestBody);
+                if (category == null || category.getId() != 0) {
+                    resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+                    return;
+                }
+                categoryRepository.create(category);
+                resp.sendError(HttpServletResponse.SC_CREATED);
+        } else {
             resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         }
-        resp.sendError(HttpServletResponse.SC_CREATED);
     }
 
     @Override
@@ -84,17 +87,33 @@ public class CategoryServlet extends AbstractServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo();
         if (isNotCorrectPath(path)) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         } else {
             int id = getIdFromPath(path);
-            String json = jsonUtils.getStringFromHttpServletRequest(req);
-            Category category = objectMapper.readValue(json, Category.class);
-            if (!(categoryRepository.getById(id) == null) && category.getId() == id) {
-                categoryRepository.update(category);
-                resp.sendError(HttpServletResponse.SC_CREATED);
-            } else {
+
+            if(categoryRepository.getById(id) == null){
                 resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+                return;
             }
+
+            String requestBody = jsonUtils.getStringFromHttpServletRequest(req);
+            Category oldCategory = categoryRepository.getById(id);
+            Category newCategory = getCategoryFromRequestBody(requestBody);
+
+            if (newCategory == null || oldCategory.getId() != newCategory.getId()) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT);
+            }else{
+                categoryRepository.update(newCategory);
+                resp.sendError(HttpServletResponse.SC_CREATED);
+            }
+        }
+    }
+
+    private Category getCategoryFromRequestBody(String requestBody) throws IOException {
+        if(jsonUtils.checkJsonCompatibility(requestBody, Category.class)) {
+            return objectMapper.readValue(requestBody, Category.class);
+        } else {
+            return null;
         }
     }
 
